@@ -2,7 +2,7 @@ import numpy as np
 from enum import Enum
 
 func_dx = lambda x : (np.c_[np.zeros(x.shape[0]), x] - np.c_[ x, np.zeros(x.shape[0])])[:,1:]
-func_dy = lambda x : (np.c_[np.zeros(x.shape[1]),x.T] - np.c_[x.T, np.zeros(x.shape[1])])[:,1:].T
+func_dy = lambda x : func_dx(x.T).T
 func_gradient = lambda x : np.array([func_dx(x), func_dy(x)])
 func_magnitude = lambda x : np.sqrt((x * x).sum(axis = 0))
 
@@ -14,7 +14,7 @@ def get_greyscale_image(image, colour_wts):
     :returns: the image in greyscale
     """
     greyscale_image = image @ colour_wts
-    return greyscale_image
+    return np.uint8(greyscale_image)
     
 def reshape_bilinear(image, new_shape):
     """
@@ -60,6 +60,25 @@ class CarvingScheme(Enum):
     VERTICAL_HORIZONTAL = 0
     HORIZONTAL_VERTICAL = 1
     INTERMITTENT = 2
+
+
+def calc_energy(pixel_energies : np.array) ->  np.array:
+    pixel_energies = np.int64(pixel_energies)
+    previous_seam_energies_row = list(pixel_energies[0])
+    history = [previous_seam_energies_row]
+    y_length, x_length = pixel_energies
+    for y in range(1, y_length):
+        pixel_energies_row = pixel_energies[y]
+        seam_energies_row = []
+        for x, pixel_energy in enumerate(pixel_energies_row):
+            x_range = {max(x - 1, 0), x,  min(x + 1, x_length - 1)}
+            min_seam_energy = pixel_energy + \
+                min(previous_seam_energies_row[x_i] for x_i in x_range)
+            seam_energies_row.append(min_seam_energy)
+        previous_seam_energies_row = seam_energies_row
+        history.append(previous_seam_energies_row)
+    return np.array(history)
+
   
 def visualise_seams(image, new_shape, carving_scheme, colour):
     """
