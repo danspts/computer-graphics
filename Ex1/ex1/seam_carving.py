@@ -1,8 +1,6 @@
 import numpy as np
 from enum import Enum
-from numba import jit, njit, vectorize, prange
-import numba as nb
-from numba.pycc import CC
+from numba import njit
 
 
 def func_dx(x):
