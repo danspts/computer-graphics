@@ -1,10 +1,26 @@
 import numpy as np
 from enum import Enum
+from numba import jit, njit, vectorize, prange
+import numba as nb
+from numba.pycc import CC
 
-func_dx = lambda x : (np.c_[np.zeros(x.shape[0]), x] - np.c_[ x, np.zeros(x.shape[0])])[:,1:]
-func_dy = lambda x : func_dx(x.T).T
-func_gradient = lambda x : np.array([func_dx(x), func_dy(x)])
-func_magnitude = lambda x : np.sqrt((x * x).sum(axis = 0))
+def func_dx(x):
+    match len(x.shape):
+        case 2:
+            return np.hstack((x[:,1:], np.zeros((x.shape[0], 1)))) - x
+        case 3:
+            return np.hstack((x[:,1:,:], np.zeros((x.shape[0], 1, x.shape[2])))) - x
+
+def func_dy(x):
+    match len(x.shape):
+        case 2:
+            return np.vstack((x[1:,:], np.zeros((1,x.shape[1])))) - x
+        case 3:
+            return np.vstack((x[1:,:,:], np.zeros((1,x.shape[1],x.shape[2])))) - x
+
+def func_gradient(x) : return func_dx(x), func_dy(x)
+
+def func_magnitude(gradient) : return np.sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1])
 
 def get_greyscale_image(image, colour_wts):
     """
@@ -13,8 +29,8 @@ def get_greyscale_image(image, colour_wts):
     :param colour_wts: the weights of each colour in rgb (ints > 0)
     :returns: the image in greyscale
     """
-    greyscale_image = image @ colour_wts
-    return np.uint8(greyscale_image)
+    greyscale_image = np.uint8(image @ colour_wts)
+    return greyscale_image
     
 def reshape_bilinear(image, new_shape):
     """
@@ -27,20 +43,17 @@ def reshape_bilinear(image, new_shape):
     out_height, out_width = new_shape
     ###Your code here###
     ###**************###
-    def scaled_color(color):
-        color_dx = func_dx(color)
-        x_lin = np.linspace(0, in_height - 1, num = out_width)
-        int_x_lin = np.int64(x_lin)
-        y_lin = np.linspace(0, in_width - 1 , num = out_height)
-        int_y_lin = np.int64(y_lin)
-        x_inter = color[int_x_lin]  - (x_lin - int_x_lin)[:, None] * color_dx[int_x_lin]    
-        color_dy = func_dy(x_inter)
-        y_inter = x_inter.T[int_y_lin] - (y_lin - int_y_lin)[:, None] * color_dy.T[int_y_lin]
-        return np.uint8(y_inter.T)
-    r_T, g_T, b_T = image.T
-    colors = r_T.T, g_T.T, b_T.T
-    new_image = np.array([scaled_color(color).T for color in colors])
-    return new_image.T
+
+    color_dx = func_dx(image)
+    x_lin = np.linspace(0, in_height - 1, num = out_width + 1) # the last row and column ae deleted so we adjust by 1
+    int_x_lin = np.int64(x_lin)
+    y_lin = np.linspace(0, in_width - 1 , num = out_height + 1)
+    int_y_lin = np.int64(y_lin)
+    x_inter = image[int_x_lin]  + (x_lin - int_x_lin)[:, None,:] * color_dx[int_x_lin]    
+    color_dy = func_dy(x_inter)
+    y_inter = x_inter[:,int_y_lin] + (y_lin - int_y_lin)[:, None,:] * color_dy[:,int_y_lin]
+    return np.uint8(y_inter[:-1,:-1])
+
     
 def gradient_magnitude(image, colour_wts):
     """
@@ -53,7 +66,7 @@ def gradient_magnitude(image, colour_wts):
     ###Your code here###
     ###**************###
     gradient = func_gradient(greyscale)
-    magnitude = func_magnitude(gradient)
+    magnitude = np.uint16(func_magnitude(gradient))
     return magnitude
 
 class CarvingScheme(Enum):
@@ -61,23 +74,15 @@ class CarvingScheme(Enum):
     HORIZONTAL_VERTICAL = 1
     INTERMITTENT = 2
 
-
-def calc_energy(pixel_energies : np.array) ->  np.array:
-    pixel_energies = np.int64(pixel_energies)
-    previous_seam_energies_row = list(pixel_energies[0])
-    history = [previous_seam_energies_row]
-    y_length, x_length = pixel_energies
-    for y in range(1, y_length):
-        pixel_energies_row = pixel_energies[y]
-        seam_energies_row = []
-        for x, pixel_energy in enumerate(pixel_energies_row):
-            x_range = {max(x - 1, 0), x,  min(x + 1, x_length - 1)}
-            min_seam_energy = pixel_energy + \
-                min(previous_seam_energies_row[x_i] for x_i in x_range)
-            seam_energies_row.append(min_seam_energy)
-        previous_seam_energies_row = seam_energies_row
-        history.append(previous_seam_energies_row)
-    return np.array(history)
+@njit
+def calc_energy(image):
+    pixel_energies = np.zeros(image.shape, dtype=np.int64)
+    x_len, y_len = image.shape
+    for x in range(x_len):
+        for y in range(y_len):
+            y_range = np.array([max(y - 1, 0), y,  min(y + 1, x_len - 1)])
+            pixel_energies[x, y] = image[x, y] + np.min(pixel_energies[x - 1][y_range])
+    return pixel_energies
 
   
 def visualise_seams(image, new_shape, carving_scheme, colour):
@@ -95,7 +100,7 @@ def visualise_seams(image, new_shape, carving_scheme, colour):
         case CarvingScheme.VERTICAL_HORIZONTAL:
             pass
         case CarvingScheme.HORIZONTAL_VERTICAL:
-            pass
+            return visualise_seams(image.T, new_shape.T, CarvingScheme.VERTICAL_HORIZONTAL, colour).T
         case CarvingScheme.INTERMITTENT:
             pass
 
