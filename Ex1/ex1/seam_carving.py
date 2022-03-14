@@ -85,6 +85,15 @@ class CarvingScheme(Enum):
     HORIZONTAL_VERTICAL = 1
     INTERMITTENT = 2
 
+@njit
+def traceback(E, prev_pointers):
+    y_len = E.shape[0] - 1
+    arr_pointers = np.zeros(E.shape[0], np.int64)
+    start = E[y_len].argmin()
+    arr_pointers[y_len] = start
+    for i in range(y_len - 1, -1, -1):
+        arr_pointers[i] = prev_pointers[i, arr_pointers[i+1]]
+    return arr_pointers
 
 @njit
 def calc_energy(image, forward = False):
