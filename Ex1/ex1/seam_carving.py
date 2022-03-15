@@ -135,7 +135,7 @@ def carve_vertical(image, new_shape, magnitude, mask):
         mask = remove_tb_from_mask(traceback=tb, mask=mask)
     return mask, tbs
 
-def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts):
+def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts, concat = True):
     """
     Visualises the seams that would be removed when reshaping an image to new image (see example in notebook)
     :param image: The original image
@@ -147,24 +147,32 @@ def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts):
     ###Your code here###
     ###**************###
     grad_magnitude = gradient_magnitude(image, colour_wts)
-    tbs = []
+    tbs_vertical = []
+    tbs_horizontal = []
+
     match carving_scheme:
         case CarvingScheme.VERTICAL_HORIZONTAL:
             mask = generate_mask(image.shape[0], image.shape[1])
             mask, tbs_vertical = carve_vertical(image, new_shape, grad_magnitude, mask)
-            tbs.extend(tbs_vertical)
             grad_magnitude_T, image_T = grad_magnitude.T, image.transpose((1, 0, 2))
             mask_T = np.flip(np.transpose(mask, (1, 0, 2)), axis = 2)
             new_shape_T = new_shape[::-1]
-            mask_T, tbs_horizontal = carve_vertical(image_T, new_shape_T, grad_magnitude_T, mask_T)
-            tbs.extend(np.flip(tbs_horizontal, axis = 2))
+            mask_T, tbs_horizontal_temp = carve_vertical(image_T, new_shape_T, grad_magnitude_T, mask_T)
+            tbs_horizontal = np.flip(tbs_horizontal_temp, axis = 2)
         case CarvingScheme.HORIZONTAL_VERTICAL:
-            return np.flip(visualise_seams(
-                np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour, colour_wts
-            ), axis = 1)
+            tbs_vertical_flipped, tbs_horizontal_flipped = visualise_seams(
+                np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour, colour_wts, concat=False
+            )
+            tbs_vertical = list(np.flip(tbs_vertical_flipped, axis = 2))
+            tbs_horizontal = list(np.flip(tbs_horizontal_flipped, axis = 2))
         case CarvingScheme.INTERMITTENT:
             pass
-    return tbs
+
+    if concat:
+        tbs_vertical.extend( tbs_horizontal)
+        return tbs_vertical
+    else:
+        return tbs_vertical, tbs_horizontal
 
 
 def reshape_seam_craving(image, new_shape, carving_scheme):
