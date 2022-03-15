@@ -90,7 +90,6 @@ def generate_mask(x_len, y_len):
     B_ = np.arange(y_len, dtype=np.int64)[:,None].T.repeat(x_len, axis =0)
     return np.dstack((A_, B_))
 
-@njit
 def remove_tb_from_mask(traceback, mask):
     shape = mask.shape
     temp_mask = np.full(shape, True, dtype=bool)
@@ -124,10 +123,11 @@ def calc_energy(image, mask):
                               [x - 1,y] if min_energy == pixel_energies[x - 1,y] else [x - 1, min(y + 1, y_len - 1)]
     return pixel_energies, backtrack
 
-def carve_vertical(image, new_shape, magnitude, mask):
+def carve_vertical(magnitude, new_shape , mask):
     tbs = []
     mask_vertical = mask
-    for _ in range(image.shape[1] - new_shape[1]):
+    print(mask.shape[1] - new_shape[1])
+    for _ in range(mask.shape[1] - new_shape[1]):
         Energy, backtrack = calc_energy(magnitude, mask_vertical)
         tb = traceback(E = Energy, prev_pointers = backtrack)
         tbs.append(tb)
@@ -135,7 +135,7 @@ def carve_vertical(image, new_shape, magnitude, mask):
     return mask_vertical, tbs
 
 
-def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts, concat = True):
+def visualise_seams(image, new_shape, carving_scheme, colour):
     """
     Visualises the seams that would be removed when reshaping an image to new image (see example in notebook)
     :param image: The original image
@@ -146,23 +146,24 @@ def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts, concat
     """
     ###Your code here###
     ###**************###
+    pass
+
+def get_seams(image, new_shape, carving_scheme, colour_wts, concat = True):
     grad_magnitude = gradient_magnitude(image, colour_wts)
     tbs_vertical = []
     tbs_horizontal = []
-
     match carving_scheme:
         case CarvingScheme.VERTICAL_HORIZONTAL:
-            mask = generate_mask(image.shape[0], image.shape[1])
-            mask_vertical, tbs_vertical = carve_vertical(image, new_shape, grad_magnitude, mask)
-            grad_magnitude_T, image_T = grad_magnitude.T, image.transpose((1, 0, 2))
+            mask = generate_mask(grad_magnitude.shape[0], grad_magnitude.shape[1])
+            mask_vertical, tbs_vertical = carve_vertical(grad_magnitude, new_shape, mask)
+            grad_magnitude_T = grad_magnitude.T
             mask_T = np.flip(np.transpose(mask_vertical, (1, 0, 2)), axis = 2)
-            mask = generate_mask(mask_T.shape[0], mask_T.shape[1])
-            new_shape_T = new_shape[::-1]
-            mask, tbs_horizontal_temp = carve_vertical(mask, new_shape_T, grad_magnitude_T, mask_T)
-            tbs_horizontal = np.flip([[mask_T[tuple(i)] for i in j] for j in tbs_horizontal_temp], axis = 2)
+            new_shape_T = (new_shape[1], grad_magnitude.shape[0] )
+            print(new_shape_T, mask_T.shape)
+            mask_T, tbs_horizontal = carve_vertical(grad_magnitude_T, new_shape[::-1], mask_T)
         case CarvingScheme.HORIZONTAL_VERTICAL:
             tbs_vertical_flipped, tbs_horizontal_flipped = visualise_seams(
-                np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour, colour_wts, concat=False
+                np.transpose(image.T, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour_wts, concat=False
             )
             tbs_vertical = list(np.flip(tbs_vertical_flipped, axis = 2))
             tbs_horizontal = list(np.flip(tbs_horizontal_flipped, axis = 2))
@@ -179,10 +180,10 @@ def overwrite_tb_pixels(image, tbs, colour = [0, 0, 0]):
     image_copy = image.copy()
     for tb in tbs:
         for i in tb:
-            image_copy[tuple(i)] = 0 
+            image_copy[tuple(i)] = colour
     return image_copy
     
-def reshape_seam_craving(image, new_shape, carving_scheme):
+def reshape_seam_craving(image, new_shape, carving_scheme, colour_wts):
     """
     Resizes an image to new shape using seam carving
     :param image: The original image
@@ -192,4 +193,10 @@ def reshape_seam_craving(image, new_shape, carving_scheme):
     """
     ###Your code here###
     ###**************###
-    return new_image
+    seams = get_seams(image, new_shape, carving_scheme, colour_wts )
+    temp_mask = np.full(image.shape, True, dtype=bool)
+    for tb in seams:
+        for index in tb:
+            temp_mask[tuple(index)] = False
+    image = image[temp_mask].reshape(*new_shape, 3)
+    return image
