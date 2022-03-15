@@ -90,38 +90,50 @@ def generate_mask(x_len, y_len):
     B_ = np.arange(y_len, dtype=np.int64)[:,None].T.repeat(x_len, axis =0)
     return np.dstack((A_, B_))
 
-def remove_tb_from_mask(traceback, mask, x = True):
+def remove_tb_from_mask(traceback, mask):
     shape = mask.shape
     temp_mask = np.full(shape, True, dtype=bool)
-    for i in range(shape[0]):
-        temp_mask[i,traceback[i]] = False
-    new_mask = mask[temp_mask].reshape(shape[0] if x else shape[0] - 1, shape[1] - 1 if  x else shape[1], 2)
+    for index in traceback:
+        temp_mask[tuple(index)] = False
+    new_mask = mask[temp_mask].reshape(shape[0], shape[1] - 1, 2)
     return new_mask
 
 # @njit
 def traceback(E, prev_pointers):
     y_len = E.shape[0]
-    arr_pointers = np.zeros(y_len, np.int64)
-    start = E[y_len - 1].argmin()
+    arr_pointers = np.zeros((y_len, 2), np.int64)
+    start = [y_len - 1, E[y_len - 1].argmin()]
     arr_pointers[y_len - 1] = start
     for i in range(y_len - 2, -1, -1):
-        arr_pointers[i] = prev_pointers[i, arr_pointers[i+1]]
+        arr_pointers[i] = prev_pointers[tuple(arr_pointers[i + 1])]
     return arr_pointers
 
 def calc_energy(image, mask):
     x_len, y_len, _ = mask.shape
     pixel_energies = np.zeros((x_len, y_len), dtype=np.int64)
     pixel_energies[0] = [image[tuple(index)] for index in mask[0]]
-    backtrack = np.zeros((x_len, y_len), dtype=np.int64)
+    backtrack = np.zeros(mask.shape, dtype=np.int64)
+    print(backtrack.shape)
     for x in range(1, x_len):
         for y in range(y_len):
             y_range = np.array([max(y - 1, 0), y, min(y + 1, y_len - 1)])
             min_energy = min(pixel_energies[x - 1, y_range])
             pixel_energies[x, y] = image[tuple(mask[x, y])] + min_energy
-            backtrack[x, y] = mask[x, max(y - 1, 0)] if min_energy == pixel_energies[x - 1, max(y - 1, 0)] else \
-                              mask[x,y] if min_energy == pixel_energies[x - 1,y] else mask[x, min(y + 1, y_len - 1)]
-    return pixel_energies, backtrack, mask
+            backtrack[x, y] = [x - 1, max(y - 1, 0)] if min_energy == pixel_energies[x - 1, max(y - 1, 0)] else \
+                              [x - 1,y] if min_energy == pixel_energies[x - 1,y] else [x - 1, min(y + 1, y_len - 1)]
+    return pixel_energies, backtrack
 
+def carve_vertical(image, new_shape, magnitude, mask):
+    tbs = []
+    print(image.shape[1] - new_shape[1])
+    for _ in range(image.shape[1] - new_shape[1]):
+        print(_)
+        Energy, backtrack = calc_energy(magnitude, mask)
+        print(f"Energy.shape = ", Energy.shape)
+        tb = traceback(E = Energy, prev_pointers = backtrack)
+        tbs.append(tb)
+        mask = remove_tb_from_mask(traceback=tb, mask=mask)
+    return mask, tbs
 
 def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts):
     """
@@ -139,22 +151,17 @@ def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts):
     match carving_scheme:
         case CarvingScheme.VERTICAL_HORIZONTAL:
             mask = generate_mask(image.shape[0], image.shape[1])
-            for _ in range(image.shape[0] - new_shape[0]):
-                print(_)
-                Energy, backtrack, mask = calc_energy(grad_magnitude, mask)
-                tb = traceback(Energy, backtrack)
-                tbs.append(tb)
-                mask = remove_tb_from_mask(traceback=tb, mask=mask)
-            grad_magnitude = grad_magnitude.T
-            mask = np.flip(mask, axis = 2)
-            for _ in range(image.shape[1] - new_shape[1]):
-                Energy, backtrack, mask = calc_energy(grad_magnitude, mask)
-                tb = traceback(Energy, backtrack)
-                tbs.append(tb)
+            mask, tbs_vertical = carve_vertical(image, new_shape, grad_magnitude, mask)
+            tbs.extend(tbs_vertical)
+            grad_magnitude_T, image_T = grad_magnitude.T, image.transpose((1, 0, 2))
+            mask_T = np.flip(np.transpose(mask, (1, 0, 2)), axis = 2)
+            new_shape_T = new_shape[::-1]
+            mask_T, tbs_horizontal = carve_vertical(image_T, new_shape_T, grad_magnitude_T, mask_T)
+            tbs.extend(np.flip(tbs_horizontal, axis = 2))
         case CarvingScheme.HORIZONTAL_VERTICAL:
-            return visualise_seams(
-                image.T, new_shape.T, CarvingScheme.VERTICAL_HORIZONTAL, colour
-            ).T
+            return np.flip(visualise_seams(
+                np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour, colour_wts
+            ), axis = 1)
         case CarvingScheme.INTERMITTENT:
             pass
     return tbs
