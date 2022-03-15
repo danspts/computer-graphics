@@ -1,6 +1,6 @@
 import numpy as np
 from enum import Enum
-# from numba import njit
+from numba import njit
 
 
 def func_dx(x):
@@ -90,6 +90,7 @@ def generate_mask(x_len, y_len):
     B_ = np.arange(y_len, dtype=np.int64)[:,None].T.repeat(x_len, axis =0)
     return np.dstack((A_, B_))
 
+@njit
 def remove_tb_from_mask(traceback, mask):
     shape = mask.shape
     temp_mask = np.full(shape, True, dtype=bool)
@@ -98,14 +99,14 @@ def remove_tb_from_mask(traceback, mask):
     new_mask = mask[temp_mask].reshape(shape[0], shape[1] - 1, 2)
     return new_mask
 
-# @njit
 def traceback(E, prev_pointers):
-    y_len = E.shape[0]
-    arr_pointers = np.zeros((y_len, 2), np.int64)
-    start = [y_len - 1, E[y_len - 1].argmin()]
-    arr_pointers[y_len - 1] = start
-    for i in range(y_len - 2, -1, -1):
-        arr_pointers[i] = prev_pointers[tuple(arr_pointers[i + 1])]
+    x_len = prev_pointers.shape[0]
+    arr_pointers = np.zeros((x_len, 2), np.int64)
+    start = [x_len - 1, E[x_len - 1].argmin()]
+    arr_pointers[x_len - 1] = start
+    for i in range(x_len - 1, 0, -1):
+        arr_pointers[i] = start
+        start = prev_pointers[tuple(arr_pointers[i])]
     return arr_pointers
 
 def calc_energy(image, mask):
@@ -125,15 +126,14 @@ def calc_energy(image, mask):
 
 def carve_vertical(image, new_shape, magnitude, mask):
     tbs = []
-    print(image.shape[1] - new_shape[1])
+    mask_vertical = mask
     for _ in range(image.shape[1] - new_shape[1]):
-        print(_)
-        Energy, backtrack = calc_energy(magnitude, mask)
-        print(f"Energy.shape = ", Energy.shape)
+        Energy, backtrack = calc_energy(magnitude, mask_vertical)
         tb = traceback(E = Energy, prev_pointers = backtrack)
         tbs.append(tb)
-        mask = remove_tb_from_mask(traceback=tb, mask=mask)
-    return mask, tbs
+        mask_vertical = remove_tb_from_mask(traceback=tb, mask=mask_vertical)
+    return mask_vertical, tbs
+
 
 def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts, concat = True):
     """
@@ -153,12 +153,13 @@ def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts, concat
     match carving_scheme:
         case CarvingScheme.VERTICAL_HORIZONTAL:
             mask = generate_mask(image.shape[0], image.shape[1])
-            mask, tbs_vertical = carve_vertical(image, new_shape, grad_magnitude, mask)
+            mask_vertical, tbs_vertical = carve_vertical(image, new_shape, grad_magnitude, mask)
             grad_magnitude_T, image_T = grad_magnitude.T, image.transpose((1, 0, 2))
-            mask_T = np.flip(np.transpose(mask, (1, 0, 2)), axis = 2)
+            mask_T = np.flip(np.transpose(mask_vertical, (1, 0, 2)), axis = 2)
+            mask = generate_mask(mask_T.shape[0], mask_T.shape[1])
             new_shape_T = new_shape[::-1]
-            mask_T, tbs_horizontal_temp = carve_vertical(image_T, new_shape_T, grad_magnitude_T, mask_T)
-            tbs_horizontal = np.flip(tbs_horizontal_temp, axis = 2)
+            mask, tbs_horizontal_temp = carve_vertical(mask, new_shape_T, grad_magnitude_T, mask_T)
+            tbs_horizontal = np.flip([[mask_T[tuple(i)] for i in j] for j in tbs_horizontal_temp], axis = 2)
         case CarvingScheme.HORIZONTAL_VERTICAL:
             tbs_vertical_flipped, tbs_horizontal_flipped = visualise_seams(
                 np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour, colour_wts, concat=False
@@ -174,7 +175,13 @@ def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts, concat
     else:
         return tbs_vertical, tbs_horizontal
 
-
+def overwrite_tb_pixels(image, tbs, colour = [0, 0, 0]):
+    image_copy = image.copy()
+    for tb in tbs:
+        for i in tb:
+            image_copy[tuple(i)] = 0 
+    return image_copy
+    
 def reshape_seam_craving(image, new_shape, carving_scheme):
     """
     Resizes an image to new shape using seam carving
