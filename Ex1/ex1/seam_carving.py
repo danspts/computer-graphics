@@ -1,6 +1,6 @@
 import numpy as np
 from enum import Enum
-from numba import njit
+# from numba import njit
 
 
 def func_dx(x):
@@ -20,11 +20,11 @@ def func_dy(x):
 
 
 def func_gradient(x):
-    return func_dx(x), func_dy(x)
+    return np.array([func_dx(x), func_dy(x)])
 
 
 def func_magnitude(gradient):
-    return np.sqrt(gradient[0] * gradient[0] + gradient[1] * gradient[1])
+    return np.sqrt(np.sum(gradient * gradient, axis=0))
 
 
 def get_greyscale_image(image, colour_wts):
@@ -72,11 +72,11 @@ def gradient_magnitude(image, colour_wts):
     :param colour_wts: the weights of each colour in rgb (> 0)
     :returns: The gradient image
     """
-    greyscale = get_greyscale_image(image, colour_wts)
+    greyscale = np.int64(get_greyscale_image(image, colour_wts))
     ###Your code here###
     ###**************###
     gradient = func_gradient(greyscale)
-    magnitude = np.uint16(func_magnitude(gradient))
+    magnitude = func_magnitude(gradient)
     return magnitude
 
 
@@ -85,21 +85,34 @@ class CarvingScheme(Enum):
     HORIZONTAL_VERTICAL = 1
     INTERMITTENT = 2
 
-@njit
+def generate_mask(x_len, y_len):
+    A_ = np.arange(x_len, dtype=np.int64)[:,None].repeat(y_len, axis =1)
+    B_ = np.arange(y_len, dtype=np.int64)[:,None].T.repeat(x_len, axis =0)
+    return np.dstack((A_, B_))
+
+def remove_tb_from_mask(traceback, mask, x = True):
+    shape = mask.shape
+    temp_mask = np.full(shape, True, dtype=bool)
+    for i in range(shape[0]):
+        temp_mask[i,traceback[i]] = False
+    new_mask = mask[temp_mask].reshape(shape[0] if x else shape[0] - 1, shape[1] - 1 if  x else shape[1], 2)
+    return new_mask
+
+# @njit
 def traceback(E, prev_pointers):
-    y_len = E.shape[0] - 1
-    arr_pointers = np.zeros(E.shape[0], np.int64)
-    start = E[y_len].argmin()
-    arr_pointers[y_len] = start
-    for i in range(y_len - 1, -1, -1):
+    y_len = E.shape[0]
+    arr_pointers = np.zeros(y_len, np.int64)
+    start = E[y_len - 1].argmin()
+    arr_pointers[y_len - 1] = start
+    for i in range(y_len - 2, -1, -1):
         arr_pointers[i] = prev_pointers[i, arr_pointers[i+1]]
     return arr_pointers
 
-@njit
-def calc_energy(image, forward = False):
+def calc_energy(image, mask):
     pixel_energies = np.zeros(image.shape, dtype=np.int64)
     pixel_energies[0] = image[0]
     backtrack = np.zeros(image.shape, dtype=np.int64)
+    backtrack[0] = np.arange(image.shape[1], dtype=np.int64)
     x_len, y_len = image.shape
     for x in range(1, x_len):
         for y in range(y_len):
@@ -108,10 +121,10 @@ def calc_energy(image, forward = False):
             pixel_energies[x, y] = image[x, y] + min_energy
             backtrack[x, y] = max(y - 1, 0) if min_energy == pixel_energies[x - 1][max(y - 1, 0)] else \
                               y if min_energy == pixel_energies[x - 1][y] else min(y + 1, y_len - 1)
-    return pixel_energies, backtrack
+    return pixel_energies, backtrack, mask
 
 
-def visualise_seams(image, new_shape, carving_scheme, colour):
+def visualise_seams(image, new_shape, carving_scheme, colour, colour_wts):
     """
     Visualises the seams that would be removed when reshaping an image to new image (see example in notebook)
     :param image: The original image
@@ -122,18 +135,28 @@ def visualise_seams(image, new_shape, carving_scheme, colour):
     """
     ###Your code here###
     ###**************###
+    grad_magnitude = gradient_magnitude(image, colour_wts)
+    tbs = []
     match carving_scheme:
         case CarvingScheme.VERTICAL_HORIZONTAL:
-            pass
+            mask = generate_mask(image.shape[0], image.shape[1])
+            for _ in range(image.shape[0] - new_shape[0]):
+                print(_)
+                Energy, backtrack, mask = calc_energy(grad_magnitude, mask)
+                tb = traceback(Energy, backtrack)
+                tbs.append(tb)
+            # grad_magnitude = grad_magnitude.T
+            # for _ in range(image.shape[1] - new_shape[1]):
+            #     Energy, backtrack, mask = calc_energy(grad_magnitude, mask)
+            #     tb = traceback(Energy, backtrack)
+            #     tbs.append(tb)
         case CarvingScheme.HORIZONTAL_VERTICAL:
             return visualise_seams(
                 image.T, new_shape.T, CarvingScheme.VERTICAL_HORIZONTAL, colour
             ).T
         case CarvingScheme.INTERMITTENT:
             pass
-
-    magnitude = image
-    return seam_image
+    return tbs
 
 
 def reshape_seam_craving(image, new_shape, carving_scheme):
