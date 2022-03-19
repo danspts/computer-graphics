@@ -99,32 +99,36 @@ def remove_tb_from_mask(traceback, mask):
     shape = mask.shape
     temp_mask = np.full(shape, True, dtype=bool)
     for index in traceback:
-        temp_mask[tuple(index)] = False
+        temp_mask[index[0], index[1]] = [False, False]
     new_mask = mask[temp_mask].reshape(shape[0], shape[1] - 1, 2)
     return new_mask
 
+@njit
 def traceback(E, prev_pointers, mask):
     x_len = prev_pointers.shape[0]
     masked_arr_pointers = np.zeros((x_len, 2), np.int64)
     arr_pointers = np.zeros((x_len, 2), np.int64)
-    next = [x_len - 1, E[x_len - 1].argmin()]
+    next = np.zeros(2, np.int64)
+    next[0] = x_len - 1
+    next[1] = E[x_len - 1].argmin()
     for i in range(x_len - 1, -1, -1):
         masked_arr_pointers[i] = next
-        arr_pointers[i] = mask[tuple(next)]
-        next = prev_pointers[tuple(masked_arr_pointers[i])]
+        arr_pointers[i] = mask[next[0], next[1]]
+        next = prev_pointers[masked_arr_pointers[i][0], masked_arr_pointers[i][1]]
     return masked_arr_pointers, arr_pointers
 
+@njit(cache=True)
 def calc_energy(image, mask):
     x_len, y_len, _ = mask.shape
     pixel_energies = np.zeros((x_len, y_len), dtype=np.int64)
-    pixel_energies[0] = [image[tuple(index)] for index in mask[0]]
+    pixel_energies[0] = [image[index[0], index[1]] for index in mask[0]]
     backtrack = np.zeros(mask.shape, dtype=np.int64)
     print(backtrack.shape)
     for x in range(1, x_len):
         for y in range(y_len):
             y_range = np.array([max(y - 1, 0), y, min(y + 1, y_len - 1)])
-            min_energy = min(pixel_energies[x - 1, y_range])
-            pixel_energies[x, y] = image[tuple(mask[x, y])] + min_energy
+            min_energy = min([pixel_energies[x - 1, y] for y in y_range])
+            pixel_energies[x, y] = image[mask[x, y, 0], mask[x, y, 1]] + min_energy
             backtrack[x, y] = [x - 1, max(y - 1, 0)] if min_energy == pixel_energies[x - 1, max(y - 1, 0)] else \
                               [x - 1,y] if min_energy == pixel_energies[x - 1,y] else [x - 1, min(y + 1, y_len - 1)]
     return pixel_energies, backtrack
@@ -196,8 +200,8 @@ def get_seams(image, new_shape, carving_scheme, colour_wts, concat = True, mask 
 def overwrite_tb_pixels(image, tbs, colour = [0, 0, 0]):
     image_copy = image.copy()
     for tb in tbs:
-        for i in tb:
-            image_copy[tuple(i)] = colour
+        for index in tb:
+            image_copy[index[0], index[1]] = colour
     return image_copy
     
 def reshape_seam_carving(image, new_shape, carving_scheme, colour_wts):
@@ -214,7 +218,6 @@ def reshape_seam_carving(image, new_shape, carving_scheme, colour_wts):
     temp_mask = np.full(image.shape, True, dtype=bool)
     for tb in seams:
         for index in tb:
-            temp_mask[tuple(index)] = [False, False, False]
-    print(np.sum([temp_mask == False]))
+            temp_mask[index[0], index[1]] = [False, False, False]
     image = image[temp_mask].reshape((new_shape[0], new_shape[1], 3))
     return image
