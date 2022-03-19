@@ -141,9 +141,9 @@ def calc_energy(image, mask):
             energy_options = []
             for y_i in y_range:
                 base_val = pixel_energies[x - 1, y] + np.absolute(grayscale_int[x,y_range[0]]-grayscale_int[x,y_range[2]])
-                if y_i == y_range[0]:
+                if y_i == y_range[0] and y_range[0] != y_range[1]:
                         base_val += np.absolute(grayscale_int[x, y_range[0]]-grayscale_int[x - 1, y])
-                elif y_i == y_range[2]:
+                elif y_i == y_range[2] and y_range[2] != y_range[1]:
                         base_val += np.absolute(grayscale_int[x, y_range[2]]-grayscale_int[x - 1, y])
                 energy_options.append(base_val) 
             min_energy = min(energy_options)   
