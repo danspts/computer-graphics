@@ -129,24 +129,31 @@ def traceback(E, prev_pointers, mask):
 def calc_energy(image, mask):
     x_len, y_len, _ = mask.shape
     pixel_energies = np.zeros((x_len, y_len), dtype=np.int64)
-    print("check1")
-    for i in range(y_len):
-        pixel_energies[i] = [image[index[0], index[1]] for index in mask[i]]
-    print("check2")
+    pixel_energies[0] = [image[index[0], index[1]] for index in mask[0]]
+    grayscale_int = np.zeros((x_len, y_len), dtype=np.int64)
+    for i in range(x_len):
+        grayscale_int[i] = [image[index[0], index[1]] for index in mask[i]]
     backtrack = np.zeros(mask.shape, dtype=np.int64)
     print(backtrack.shape)
     for x in range(1, x_len):
         for y in range(y_len):
             y_range = np.array([max(y - 1, 0), y, min(y + 1, y_len - 1)])
-            min_energy = min([pixel_energies[x - 1, y] for y in y_range])
+            energy_options = []
+            for y_i in y_range:
+                base_val = pixel_energies[x - 1, y] + np.absolute(grayscale_int[x,y_range[0]]-grayscale_int[x,y_range[2]])
+                if y_i == y_range[0]:
+                        base_val += np.absolute(grayscale_int[x, y_range[0]]-grayscale_int[x - 1, y])
+                elif y_i == y_range[2]:
+                        base_val += np.absolute(grayscale_int[x, y_range[2]]-grayscale_int[x - 1, y])
+                energy_options.append(base_val) 
+            min_energy = min(energy_options)   
             pixel_energies[x, y] = image[mask[x, y, 0], mask[x, y, 1]] + min_energy
-            backtrack[x, y] = (
-                [x - 1, max(y - 1, 0)]
-                if min_energy == pixel_energies[x - 1, max(y - 1, 0)]
-                else [x - 1, y]
-                if min_energy == pixel_energies[x - 1, y]
-                else [x - 1, min(y + 1, y_len - 1)]
-            )
+            if min_energy == energy_options[0]:
+                backtrack[x ,y] = [x - 1, y_range[0]]
+            elif min_energy == energy_options[1]:
+                backtrack[x, y] = [x - 1, y]
+            else:
+                backtrack[x, y] = [x - 1, y_range[2]]
     return pixel_energies, backtrack
 
 
