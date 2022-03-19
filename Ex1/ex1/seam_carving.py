@@ -140,7 +140,7 @@ def calc_energy(image, mask):
             y_range = np.array([max(y - 1, 0), y, min(y + 1, y_len - 1)])
             energy_options = []
             for y_i in y_range:
-                base_val = pixel_energies[x - 1, y] + np.absolute(grayscale_int[x,y_range[0]]-grayscale_int[x,y_range[2]])
+                base_val = pixel_energies[x - 1, y_i] + np.absolute(grayscale_int[x,y_range[0]]-grayscale_int[x,y_range[2]])
                 if y_i == y_range[0] and y_range[0] != y_range[1]:
                         base_val += np.absolute(grayscale_int[x, y_range[0]]-grayscale_int[x - 1, y])
                 elif y_i == y_range[2] and y_range[2] != y_range[1]:
