@@ -158,9 +158,9 @@ def visualise_seams(image, new_shape, visualize_scheme, colour, greyscale_wt):
     delete_tbs = []
     match visualize_scheme:
         case VisualizeScheme.VERTICAL:
-            delete_tbs, _ = get_seams(image, new_shape, CarvingScheme.VERTICAL_HORIZONTAL, colour_wts=greyscale_wt,concat=False)
+            delete_tbs, *_ = get_seams(image, new_shape, CarvingScheme.VERTICAL_HORIZONTAL, colour_wts=greyscale_wt,concat=False)
         case VisualizeScheme.HORIZONTAL:
-            delete_tbs, _ = get_seams(image, new_shape, CarvingScheme.HORIZONTAL_VERTICAL, colour_wts=greyscale_wt,concat=False)
+            delete_tbs, *_ = get_seams(image, new_shape, CarvingScheme.HORIZONTAL_VERTICAL, colour_wts=greyscale_wt,concat=False)
         case VisualizeScheme.BOTH:
             delete_tbs = get_seams(image, new_shape, CarvingScheme.VERTICAL_HORIZONTAL, colour_wts=greyscale_wt)
     return overwrite_tb_pixels(tbs=delete_tbs, image=image, colour=colour)
@@ -169,20 +169,23 @@ def get_seams(image, new_shape, carving_scheme, colour_wts, concat = True, mask 
     grad_magnitude = gradient_magnitude(image, colour_wts)
     tbs_vertical = []
     tbs_horizontal = []
-    if not mask:
+    if mask is None:
         mask = generate_mask(grad_magnitude.shape[0], grad_magnitude.shape[1])
     match carving_scheme:
         case CarvingScheme.VERTICAL_HORIZONTAL:
-            mask_vertical, tbs_vertical = carve_vertical(grad_magnitude, new_shape, mask)
+            mask, tbs_vertical = carve_vertical(grad_magnitude, new_shape, mask)
             grad_magnitude_T = grad_magnitude.T
-            mask_T = np.flip(np.transpose(mask_vertical, (1, 0, 2)), axis = 2)
+            mask_T = np.flip(np.transpose(mask, (1, 0, 2)), axis = 2)
             mask_T, tbs_horizontal_temp = carve_vertical(grad_magnitude_T, new_shape[::-1], mask_T)
             if tbs_horizontal_temp:
                 tbs_horizontal = list(np.flip(tbs_horizontal_temp, axis = 2))
+            mask = np.flip(np.transpose(mask_T, (1, 0, 2)), axis = 2)
         case CarvingScheme.HORIZONTAL_VERTICAL:
-            tbs_vertical_flipped, tbs_horizontal_flipped = get_seams(
-                np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour_wts, concat=False, mask=mask
+            mask_T = np.flip(np.transpose(mask, (1, 0, 2)), axis = 2)
+            tbs_vertical_flipped, tbs_horizontal_flipped, mask_T = get_seams(
+                np.transpose(image, (1, 0, 2)), new_shape[::-1], CarvingScheme.VERTICAL_HORIZONTAL, colour_wts, concat=False, mask=mask_T
             ) 
+            mask = np.flip(np.transpose(mask_T, (1, 0, 2)), axis = 2)
             tbs_vertical = list(np.flip(tbs_vertical_flipped, axis = 2)) if tbs_vertical_flipped else []
             tbs_horizontal = list(np.flip(tbs_horizontal_flipped, axis = 2)) if tbs_horizontal_flipped else []
         case CarvingScheme.INTERMITTENT:
