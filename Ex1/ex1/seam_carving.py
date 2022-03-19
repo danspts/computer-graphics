@@ -121,7 +121,10 @@ def traceback(E, prev_pointers, mask):
 def calc_energy(image, mask):
     x_len, y_len, _ = mask.shape
     pixel_energies = np.zeros((x_len, y_len), dtype=np.int64)
-    pixel_energies[0] = [image[index[0], index[1]] for index in mask[0]]
+    print("check1")
+    for i in range(y_len):
+        pixel_energies[i] = [image[index[0], index[1]] for index in mask[i]]
+    print("check2")
     backtrack = np.zeros(mask.shape, dtype=np.int64)
     print(backtrack.shape)
     for x in range(1, x_len):
