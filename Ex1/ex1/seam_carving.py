@@ -270,6 +270,10 @@ def get_seams(
     """
     if new_shape[0] > image.shape[0] or new_shape[1] > image.shape[1]:
         raise ValueError("Supports only seam removal")
+    if new_shape[0] < 0 or new_shape[1] < 0:
+        raise ValueError("Cannot have negative dimensions")
+    if new_shape[0] == 0 or new_shape[1] == 0:
+        raise ValueError("New image cannot be empty")
     grad_magnitude = gradient_magnitude(image, colour_wts)
     seams_vertical = []
     seams_horizontal = []
