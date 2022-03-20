@@ -268,6 +268,8 @@ def get_seams(
     Returns:
         np.array | Tuple[np.array, np.array, np.array]: A list of seams or a tuple with vertical seams, horizontal seams and the mask
     """
+    if new_shape[0] > image.shape[0] or new_shape[1] > image.shape[1]:
+        raise ValueError("Supports only seam removal")
     grad_magnitude = gradient_magnitude(image, colour_wts)
     seams_vertical = []
     seams_horizontal = []
