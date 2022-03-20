@@ -128,38 +128,27 @@ def traceback(E, prev_pointers, mask):
 @njit(cache=True)
 def calc_energy(image, mask):
     x_len, y_len, _ = mask.shape
+    pixel = lambda x, y : image[mask[x,y, 0], mask[x,y, 1]] if y >= 0 and y < y_len else 9999 #absurd value if you try to access out of range
     pixel_energies = np.zeros((x_len, y_len), dtype=np.int64)
-    pixel_energies[0] = [image[index[0], index[1]] for index in mask[0]]
-    grayscale_int = np.zeros((x_len, y_len), dtype=np.int64)
-    for i in range(x_len):
-        grayscale_int[i] = [image[index[0], index[1]] for index in mask[i]]
+    pixel_energies[0] = [pixel(0, y) for y in range(y_len)]
+    c_t = lambda x, y: np.absolute(pixel(x, max(y - 1, 0)) - pixel(x, min(y + 1, y_len - 1))) # top value
+    c_l = lambda x, y: np.absolute(pixel(x, y - 1) - pixel(x - 1, y)) # left value 
+    c_r = lambda x, y: np.absolute(pixel(x, y + 1) - pixel(x - 1, y)) # right value
     backtrack = np.zeros(mask.shape, dtype=np.int64)
-    print(backtrack.shape)
     for x in range(1, x_len):
         for y in range(y_len):
-            y_range = np.array([max(y - 1, 0), y, min(y + 1, y_len - 1)])
-            energy_options = []
-            for y_i in y_range:
-                base_val = pixel_energies[x - 1, y_i] + np.absolute(grayscale_int[x,y_range[0]]-grayscale_int[x,y_range[2]])
-                if y_i == y_range[0] and y_range[0] != y_range[1]:
-                        base_val += np.absolute(grayscale_int[x, y_range[0]]-grayscale_int[x - 1, y])
-                elif y_i == y_range[2] and y_range[2] != y_range[1]:
-                        base_val += np.absolute(grayscale_int[x, y_range[2]]-grayscale_int[x - 1, y])
-                energy_options.append(base_val) 
-            min_energy = min(energy_options)   
-            pixel_energies[x, y] = image[mask[x, y, 0], mask[x, y, 1]] + min_energy
-            if min_energy == energy_options[0]:
-                backtrack[x ,y] = [x - 1, y_range[0]]
-            elif min_energy == energy_options[1]:
-                backtrack[x, y] = [x - 1, y]
-            else:
-                backtrack[x, y] = [x - 1, y_range[2]]
+            energy_options = np.zeros(3, dtype=np.int64)
+            energy_options[0] = pixel_energies[x - 1, y - 1] + c_t(x,y) + c_l(x,y)
+            energy_options[1] = pixel_energies[x - 1, y] + c_t(x,y) 
+            energy_options[2] = pixel_energies[x - 1, y + 1] + c_t(x,y) + c_r(x, y)
+            min_energy = np.min(energy_options)
+            backtrack[x, y] = [x - 1, y + np.argmin(energy_options) - 1]
+            pixel_energies[x, y] = pixel(x, y) + min_energy
     return pixel_energies, backtrack
 
 
 def carve_vertical(magnitude, new_shape, mask):
     tbs = []
-    print(mask.shape[1] - new_shape[1])
     for _ in range(mask.shape[1] - new_shape[1]):
         Energy, backtrack = calc_energy(magnitude, mask)
         masked_tb, tb = traceback(E=Energy, prev_pointers=backtrack, mask=mask)
@@ -194,7 +183,7 @@ def visualise_seams(
                 concat=False,
             )
         case VisualizeScheme.HORIZONTAL:
-            delete_tbs, *_ = get_seams(
+            _, delete_tbs, _ = get_seams(
                 image,
                 new_shape,
                 CarvingScheme.HORIZONTAL_VERTICAL,
@@ -242,12 +231,12 @@ def get_seams(
             )
             mask = np.flip(np.transpose(mask_T, (1, 0, 2)), axis=2)
             tbs_vertical = (
-                list(np.flip(tbs_vertical_flipped, axis=2))
+                list(np.flip(tbs_horizontal_flipped, axis=2))
                 if tbs_vertical_flipped
                 else []
             )
             tbs_horizontal = (
-                list(np.flip(tbs_horizontal_flipped, axis=2))
+                list(np.flip(tbs_vertical_flipped, axis=2))
                 if tbs_horizontal_flipped
                 else []
             )
@@ -276,6 +265,7 @@ def get_seams(
 
 
 def overwrite_tb_pixels(image, tbs, colour=[0, 0, 0]):
+    
     image_copy = image.copy()
     for tb in tbs:
         for index in tb:
@@ -291,6 +281,7 @@ def reshape_seam_carving(
     :param image: The original image
     :param new_shape: a (height, width) tuple which is the new shape
     :param carving_scheme: the carving scheme to be used.
+    :param colour_wts: greyscale color weights if a different ration is desired
     :returns: the image resized to new_shape
     """
     *_, mask = get_seams(image, new_shape, carving_scheme, colour_wts, concat=False)
