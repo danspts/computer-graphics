@@ -1,6 +1,6 @@
 # Fdb version 3
-["pdflatex"] 1648930525 "/Users/dan/Google Drive/School/IDC/Year III/Semester 2/Computer Graphics/Exercices/Ex2/ex2.tex" "ex2.pdf" "ex2" 1648930527
-  "/Users/dan/Google Drive/School/IDC/Year III/Semester 2/Computer Graphics/Exercices/Ex2/ex2.tex" 1648930523 9394 d7a02863e6f3238da3d53d0032c72c90 ""
+["pdflatex"] 1648935946 "/Users/dan/Google Drive/School/IDC/Year III/Semester 2/Computer Graphics/Exercices/Ex2/ex2.tex" "ex2.pdf" "ex2" 1648935947
+  "/Users/dan/Google Drive/School/IDC/Year III/Semester 2/Computer Graphics/Exercices/Ex2/ex2.tex" 1648935945 9260 ecda25e2b239dfd7f522a4cb08c307d1 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/local/texlive/2021/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1246382020 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
@@ -35,7 +35,6 @@
   "/usr/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb" 1248133631 32716 08e384dc442464e7285e891af9f45947 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmex7.pfb" 1248133631 30457 bc0868ebece724ed7c3d37e3d9bff7bd ""
-  "/usr/local/texlive/2021/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb" 1248133631 31764 459c573c03a4949a528c2cc7f557e217 ""
   "/usr/local/texlive/2021/texmf-dist/tex/context/base/mkii/supp-pdf.mkii" 1461363279 71627 94eb9990bed73c364d7f53f960cc8c5b ""
   "/usr/local/texlive/2021/texmf-dist/tex/generic/iftex/iftex.sty" 1583617216 6501 4011d89d9621e0b0901138815ba5ff29 ""
   "/usr/local/texlive/2021/texmf-dist/tex/generic/iftex/ifvtex.sty" 1572645307 1057 525c2192b5febbd8c1f662c9468335bb ""
@@ -142,9 +141,9 @@
   "/usr/local/texlive/2021/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1634048760 4362028 e6008de3146e43ceb9bb64d17447259a ""
   "/usr/local/texlive/2021/texmf-var/web2c/pdftex/pdflatex.fmt" 1634048682 2798043 2f708a36955300140cc24c48366e3f4d ""
   "/usr/local/texlive/2021/texmf.cnf" 1616695596 577 4c1911a7228e554c6032256d3cf5567d ""
-  "ex2.aux" 1648930527 332 92e36e853976781b4bd3890446710e36 "pdflatex"
-  "ex2.tex" 1648930523 9394 d7a02863e6f3238da3d53d0032c72c90 ""
+  "ex2.aux" 1648935947 332 92e36e853976781b4bd3890446710e36 "pdflatex"
+  "ex2.tex" 1648935945 9260 ecda25e2b239dfd7f522a4cb08c307d1 ""
   (generated)
+  "ex2.log"
   "ex2.aux"
   "ex2.pdf"
-  "ex2.log"
