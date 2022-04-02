@@ -1,5 +1,18 @@
 \documentclass{article}
 
+\usepackage[a4paper,hmargin=2cm,vmargin=2cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{graphicx,verbatim,xspace,color, subcaption}
+\usepackage{fullpage}
+\usepackage{float}
+
+\floatstyle{boxed} \restylefloat{figure}
+
+\setlength{\oddsidemargin}{0pt}
+
 \begin{document}
     \title{Exercise 2}
     \author{227367455}
@@ -7,10 +20,200 @@
     \maketitle
 
     \section*{Question 1}
+    Let $\ell_1$ be the line that passes through $p_1=(2,9,8)$ and $p_2=(1,9,9)$ 
+    and let $\ell_2$ be the line that passes through $p_3=(1,1,1)$ and $p_4=(2,5,4)$
     \begin{enumerate}
-        \item 
+        \item Find out if the two lines intersect and if so, find the intersection point of $\ell_1$ and $\ell_2$
+        
+        $u_1 = p_2 - p_1 = \begin{bmatrix} 1 - 2 \\ 9 - 9 \\ 9 - 8 \end{bmatrix}$
+        $ = \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix}$
+
+        $\ell_1(\lambda) = p_1 + \lambda u_1 = \begin{bmatrix} 1 \\ 9 \\ 9 \end{bmatrix} + \lambda \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix}$
+
+        $u_2 = p_4 - p_3 = \begin{bmatrix} 2 - 1 \\ 5 - 1 \\ 4 - 1 \end{bmatrix}$
+        $ = \begin{bmatrix} 1 \\ 4 \\ 3 \end{bmatrix}$
+
+        $\ell_2(\lambda) = p_3 + \lambda u_2 = \begin{bmatrix} 1 \\ 1 \\ 1 \end{bmatrix} + \lambda \begin{bmatrix} 1 \\ 4 \\ 3 \end{bmatrix}$
+
+        $\frac{u_1 \cdot u_2}{\Vert u_1 \Vert \Vert u_2 \Vert} = \frac{-1 + 3}{\sqrt{2} \sqrt{1 + 16 + 9}} \neq 1, -1$
+        $\implies \ell_1$ is not parallel to $\ell_2 $ 
+
+        $\begin{bmatrix} 1 \\ 9 \\ 9 \end{bmatrix} + \lambda_1 \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix} = $
+        $\begin{bmatrix} 1 \\ 1 \\ 1 \end{bmatrix} + \lambda_2 \begin{bmatrix} 1 \\ 4 \\ 3 \end{bmatrix}$
+
+        $\iff \lambda_1 \begin{bmatrix} 1 \\ 4 \\ 3 \end{bmatrix} + \lambda_2 \begin{bmatrix} 1 \\ 0 \\ -1 \end{bmatrix} = \begin{bmatrix} 0 \\ 8 \\ 8 \end{bmatrix} $
+
+        $\iff \lambda_1 = -\lambda_2 = 2$
+
+        Now we plug in!
+
+        $p_0 = \ell_2(-2) = \begin{bmatrix} 1 \\ 1 \\ 1 \end{bmatrix} + (-2) \begin{bmatrix} 1 \\ 4 \\ 3 \end{bmatrix}$
+        $=(1 - 2(1), 1 - 2(4), 1 - 2(3)) = (-1, -7, -5)$
+
+        \item Let $S$ be the sphere whose center is the intersection of $\ell_1$ and $\ell_2$ and whose radius is $r=4$.
+         Write the implicit representation of the sphere.
+
+        $(x + 1)^2 + (y + 7)^2 + (z + 5)^2 = 4^2$
+
+        \item Find the implicit representation of the two planes $\Pi_1$ and $\Pi_2$ that are tangent to the sphere $S$ at the points of intersections of $\ell_1$ towards $p_2$ and $\ell_2$ towards $p_4$, respectively.
+        
+        We could solve the quadratic equation but we already know that we need can the point of intersection in $\ell_i(\lambda_i \pm 4)$
+
+        That is we want to solve $p' = argmin_p \big \{ \| p - p_1 \| \big | p = \ell_1(\lambda_1 + r),  r \in \{4, -4\} \big \}$
+
+        and $p'' = argmin_p \big \{ \| p - p_1 \| \big | p = \ell_2(\lambda_2 + r),  r \in \{4, -4\} \big \}$
+
+        $\triangledown S = \triangledown((x + 1)^2 + (y + 7)^2 + (z + 5)^2) = \begin{bmatrix} 2(x+1) \\ 2(y + 7) \\ 2(z+ 5) \end{bmatrix}$
+
+        $n_1 = \triangledown S(p'), n_2 = \triangledown S(p'')$
+
+        We get $\Pi_1 = n_1 \cdot (p_0 - p')$ and $\Pi_2 = n_2 \cdot (p_0 - p'')$
+
+
+
     \end{enumerate}
     \section*{Question 2}
+
+    \begin{enumerate}
+        \item Let $\ell=(2,0,3)+ \lambda(1,5,2)$ be a line. Find the projection of $p=(3,-1,4)$ on $\ell$
+
+        Clearly $p_0 = \ell(0) = (2,0,3)$ is a point on $\ell$ 
+
+        We will project $p - p_0$ onto $\ell$
+
+        Let $\hat{u} = \frac{\begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}}
+        { \Bigg \| \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix} \Bigg \| }$
+        $ = \frac{1}{ \sqrt{1^2 + 5^2 + 2^2} }  \begin{bmatrix} 1 \\ 5 \\ 2 \end{bmatrix}$
+        $ = \frac{1}{ \sqrt{30} }\begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        $proj_{\hat{u}}(p - p_0)= (\hat{u} \cdot (p - p_0)) \hat{u} $
+
+        $= \frac{1}{30} \Bigg (\begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix} \cdot \begin{bmatrix} 3 - 2 \\ -1 - 0 \\ 4 - 3 \end{bmatrix} \Bigg )\begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        $= \frac{1}{30} \Bigg (\begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix} \cdot \begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix} \Bigg )\begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        $= \frac{1}{30} (1 - 5 + 2) \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        $= \frac{1}{30} (-2) \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        $= \frac{-1}{15} \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        Now to find the projection of the point p we do:
+
+        $p_0 + proj_{\hat{u}}(p - p_0) = (2, 0, 3) + \frac{-1}{15} \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix}$
+
+        $ = (1 \frac{14}{15}, -\frac{1}{3}, 2 \frac{13}{15} )$
+
+        \item Find an implicit and a parametric representation for the plane that contains both p and $\ell$
+       
+        $v = (p - p_0) =  \begin{bmatrix} 3 - 2 \\ -1 - 0 \\ 4 - 3 \end{bmatrix} = \begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix}$
+
+        $\Pi(\lambda, \mu) = (2,0,3) + \lambda \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix} + \mu \begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix}$
+
+        $\begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix} \times \begin{bmatrix} 1 \\ 5 \\ 2\end{bmatrix} = \Bigg | \begin{matrix}
+            i & j & k \\
+            1 & 5 & 2 \\
+            1 & -1 & 1
+        \end{matrix} \Bigg | = [(5)(1) - (2)(-1)] i - [(1)(1) - (1)(2)] j + [(1)(-1) - (5)(1)] k$
+        $ = 7i + j - 6k$
+
+        $n = \begin{bmatrix} 7 \\ 1 \\ -6 \end{bmatrix}$
+
+        $n \cdot ((2, 0, 3) - (0, 0, 0)) = \begin{bmatrix} 7 \\ 1 \\ -6 \end{bmatrix} \cdot \begin{bmatrix} 2 \\ 0 \\ 3 \end{bmatrix}$
+        $ = 14 - 18 = -4 $
+
+        $\Pi : \begin{bmatrix} 7 \\ 1 \\ -6 \end{bmatrix} \cdot \begin{bmatrix} x \\ y \\ z \end{bmatrix} = -4$
+        
+    \end{enumerate}
+    
     \section*{Question 3}
+    Given the following points: 
+    
+    $P_0 =(-1,-1,3),P_1 =(-1,3,-1),P_2=(3,3,5),P_3=(3,5,3),P_4=(\frac{-1}{2},3,3)$
+
+    \begin{enumerate}
+        \item Show that $P_0, P_1, P_2, P_3 $ lie on the same plane, $H$, and find the implicit equation of $H$
+
+        $P_1 - P_0 = \begin{bmatrix} -1 - (-1) \\ 3 - (-1) \\ -1 - 3 \end{bmatrix} = \begin{bmatrix} 0 \\ 4 \\ -4 \end{bmatrix}$
+
+        $P_1 - P_0 = \begin{bmatrix} 3 - (-1) \\ 3 - (-1) \\ 5 - 3 \end{bmatrix} = \begin{bmatrix} 4 \\ 4 \\ 2 \end{bmatrix}$
+
+        $ \Bigg | \begin{matrix}
+            i & j & k \\
+            0 & 4 & -4 \\
+            4 & 4 & 2
+        \end{matrix} \Bigg |$
+        $ = [(4)(2) - (-4)(4)]i - [(0)(2) - (-4)(4)]j + [(0)(4) - (4)(4)]$
+        $ = 24i - 16j -16k = 3i - 2j - 2k$
+
+        $n = \begin{bmatrix} 3 \\ -2 \\ -2 \end{bmatrix}$
+
+        $\begin{bmatrix} 3 \\ -2 \\ -2 \end{bmatrix} \cdot \begin{bmatrix} -1 \\ -1 \\ 3 \end{bmatrix} $
+        $ = -3 + 2 - 6 = -7$
+
+        Therefore we can build H out of these 3 points.
+
+        $H : \begin{bmatrix} 3 \\ -2 \\ -2 \end{bmatrix} \cdot \begin{bmatrix} x \\ y \\ z \end{bmatrix} + 7 = 0$
+
+        Now plug in $P_3$:
+
+        $\begin{bmatrix} 3 \\ -2 \\ -2 \end{bmatrix} \cdot \begin{bmatrix} 3 \\ 5 \\ 3 \end{bmatrix} + 7 $
+        $ = 9 - 10 - 6 + 7 = 0$ as needed
+        
+        Therefore since $P_3$ lies on $H$ which was made with $P_0$, $P_1$ and $P_2$, then they all belong to the same plane H
+
+        \item b and c) Determine the outwards facing unit normal vector of each triangular face Calculate the implicit representation of the planes
+        
+        In order to do so we will iteratively find the normal n and invert it if we get a positive value when plugging in the 2 remaining points
+        
+        First we plug in $P_4$ in $H$
+
+        $\begin{bmatrix} 3 \\ -2 \\ -2 \end{bmatrix} \cdot \begin{bmatrix} \frac{-1}{2} \\ 3 \\ 3 \end{bmatrix} + 7 < 7 - 12 < 0$ as needed
+
+
+        $v_0 = 2(P_4 - P_0) = \begin{bmatrix} 1 \\ 8 \\ 0 \end{bmatrix}$,
+        $v_1 = 2(P_4 - P_1) = \begin{bmatrix} 1  \\ 0 \\ 8 \end{bmatrix}$,
+
+        $v_2 = 2(P_4 - P_2) = \begin{bmatrix} -7 \\ 0 \\ -4 \end{bmatrix}$,
+        $v_3 = 2(P_4 - P_3) = \begin{bmatrix} -7 \\ -4 \\ 0 \end{bmatrix}$
+
+
+        \paragraph{} $H_1$ defined by $P_0,P_2,P_4$ or $v_0, v_2, P_4$:
+
+        $ \Bigg | \begin{matrix}
+            i & j & k \\
+            1 & 8 & 0 \\
+            -7 & 0 & -4
+        \end{matrix} \Bigg | = \begin{bmatrix}  - 32 \\ 4 \\ 56 \end{bmatrix} = \begin{bmatrix}  - 8 \\ 1 \\ 14 \end{bmatrix}$
+
+        \paragraph{} $H_2$ defined by $P_0,P_1,P_4$ or $v_0, v_1, P_4$:
+
+        $ \Bigg | \begin{matrix}
+            i & j & k \\
+            1 & 8 & 0 \\
+            1 & 0 & 8
+        \end{matrix} \Bigg | = \begin{bmatrix} 64 \\ -8 \\ -8 \end{bmatrix} = \begin{bmatrix} 16 \\ -2 \\ -2 \end{bmatrix}$
+
+        \paragraph{} $H_3$ defined by $P_1,P_3,P_4$ or $v_0, v_2, P_4$:
+
+        $ \Bigg | \begin{matrix}
+            i & j & k \\
+            1 & 0 & 8 \\
+            -7 & -4 & 0
+        \end{matrix} \Bigg | = \begin{bmatrix} 32 \\ -56 \\ -4 \end{bmatrix} = \begin{bmatrix}  8 \\ -14 \\ -1 \end{bmatrix}$
+
+        \paragraph{} $H_4$ defined by $P_2,P_3,P_4$ or $v_3, v_2, P_4$:
+
+        $ \Bigg | \begin{matrix}
+            i & j & k \\
+            -7 & 0 & -4 \\
+            -7 & -4 & 0
+        \end{matrix} \Bigg | = \begin{bmatrix} -16 \\ -28 \\ 28 \end{bmatrix} = \begin{bmatrix} -4 \\ -7 \\ 4 \end{bmatrix}$
+
+
+        
+
+    \end{enumerate}
+
     \section*{Question 4}
 \end{document}
