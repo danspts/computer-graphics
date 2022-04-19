@@ -6,12 +6,12 @@ def normalize(vector):
     return vector / np.linalg.norm(vector)
 
 
-# TODO:
 # This function gets a vector and the normal of the surface it hit
 # This function returns the vector that reflects from the surface
 def reflected(vector, normal):
     n = normalize(normal)
-    return vector.dot(n) * n - 2 * vector 
+    return 2 * vector.dot(n) * n - vector 
+
 
 ## Lights
 
@@ -24,24 +24,21 @@ class LightSource:
 
 class DirectionalLight(LightSource):
 
-    def __init__(self, intensity):
+    def __init__(self, intensity, direction):
         super().__init__(intensity)
-        # TODO
+        self.direction = normalize(direction)
 
     # This function returns the ray that goes from the light source to a point
     def get_light_ray(self,intersection_point):
-        # TODO
-        return Ray()
+        return Ray(intersection_point, self.direction)
 
     # This function returns the distance from a point to the light source
     def get_distance_from_light(self, intersection):
-        #TODO
-        pass
+        return np.inf
 
     # This function returns the light intensity at a point
     def get_intensity(self, intersection):
-        #TODO
-        pass
+        return self.intensity
 
 
 class PointLight(LightSource):
@@ -70,14 +67,18 @@ class PointLight(LightSource):
 class SpotLight(LightSource):
 
 
-    def __init__(self, intensity):
+    def __init__(self, intensity, position, direction, kc, kl, kq):
         super().__init__(intensity)
-        # TODO
+        self.position = np.array(position)
+        self.direction = normalize(direction)
+        self.kc = kc
+        self.kl = kl
+        self.kq = kq
+        
 
     # This function returns the ray that goes from the light source to a point
     def get_light_ray(self,intersection):
-        # TODO
-        return Ray()
+        return Ray(intersection,normalize(self.position - intersection))
 
     def get_distance_from_light(self,intersection):
         #TODO
