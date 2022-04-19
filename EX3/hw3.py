@@ -1,6 +1,9 @@
 from helper_classes import *
 import matplotlib.pyplot as plt
 
+EPSILON = 1e-4
+
+
 def render_scene(camera, ambient, lights, objects, screen_size, max_depth):
     width, height = screen_size
     ratio = float(width) / height
@@ -15,13 +18,17 @@ def render_scene(camera, ambient, lights, objects, screen_size, max_depth):
 
             # This is the main loop where each pixel color is computed.
             # TODO
-            origin, direction = camera
+            origin, direction = [0,0,0,], normalize(Q - camera)
             for _ in range(max_depth):
                 traced = Ray(origin, direction)
                 if not traced:
                     break
-                    
-            
+
+            obj, M, N, col_ray = traced
+            origin, direction = M + N * EPSILON, reflected(direction, N)
+            col += reflection * col_ray
+            reflection *= obj.reflection
+
 
             
             # We clip the values between 0 and 1 so all pixel values will make sense.

@@ -10,7 +10,7 @@ def normalize(vector):
 # This function returns the vector that reflects from the surface
 def reflected(vector, normal):
     n = normalize(normal)
-    return 2 * vector.dot(n) * n - vector 
+    return vector - 2 * (vector @ n) * n 
 
 
 ## Lights
