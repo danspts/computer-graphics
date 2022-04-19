@@ -86,6 +86,7 @@ class SpotLight(LightSource):
     def get_intensity(self, intersection):
         v = normalize(intersection - self.position)
         cos = np.dot(v,self.direction)
+        d = self.get_distance_from_light(intersection)
         return self.intensity * cos / (self.kc + self.kl*d + self.kq * (d**2))
 
 
@@ -149,11 +150,22 @@ class Triangle(Object3D):
     # Later, find if the point is in the triangle using barycentric coordinates
     def intersect(self, ray: Ray):
         plane = Plane(self.normal,self.a)
-        intersection = plane.intersect(ray)
-        if intersection is None:
+        t = plane.intersect(ray)
+        if t is None:
             return None
-        areaABC = None # TODO calculate area of triangle, then calculate Barycentric Coordinates
-        pass
+        areaABC = normalize(np.cross((self.b - self.a),(self.c - self.a)))
+        p = ray.origin + t * ray.direction
+        alpha = normalize(np.cross((self.b - p),(self.c - p))) / areaABC
+        if alpha > 1 or alpha < 0:
+            return None
+        beta = normalize(np.cross((self.c - p),(self.a - p))) / areaABC
+        if beta > 1 or beta < 0:
+            return None
+        gamma = 1 - alpha - beta
+        if gamma > 1 or gamma < 0 or alpha + beta + gamma != 1:
+            return None
+        else:
+            return t, self/mnt/c/Users/User/Graphics/computer-graphics/.venv/bin/python
 
 
 class Sphere(Object3D):
