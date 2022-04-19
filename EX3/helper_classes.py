@@ -10,8 +10,8 @@ def normalize(vector):
 # This function gets a vector and the normal of the surface it hit
 # This function returns the vector that reflects from the surface
 def reflected(vector, normal):
-    v = np.array([0,0,0])
-    return v
+    n = normalize(normal)
+    return vector.dot(n) * n - 2 * vector 
 
 ## Lights
 
@@ -55,7 +55,7 @@ class PointLight(LightSource):
 
     # This function returns the ray that goes from the light source to a point
     def get_light_ray(self,intersection):
-        return Ray(intersection,normalize(self.position - intersection))
+        return Ray(intersection, normalize(self.position - intersection))
 
     # This function returns the distance from a point to the light source
     def get_distance_from_light(self,intersection):
@@ -98,7 +98,10 @@ class Ray:
     def nearest_intersected_object(self, objects):
         nearest_object = None
         min_distance = np.inf
-        #TODO
+        for i, obj in enumerate(objects):
+            dist_obj = obj.intersect(self)
+            if dist_obj < min_distance:
+                nearest_object = dist_obj
         return nearest_object, min_distance
 
 

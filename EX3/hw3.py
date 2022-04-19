@@ -15,6 +15,13 @@ def render_scene(camera, ambient, lights, objects, screen_size, max_depth):
 
             # This is the main loop where each pixel color is computed.
             # TODO
+            origin, direction = camera
+            for _ in range(max_depth):
+                traced = Ray(origin, direction)
+                if not traced:
+                    break
+                    
+            
 
             
             # We clip the values between 0 and 1 so all pixel values will make sense.
