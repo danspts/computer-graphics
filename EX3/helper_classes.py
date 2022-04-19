@@ -140,14 +140,19 @@ class Triangle(Object3D):
         self.normal = self.compute_normal()
 
     def compute_normal(self):
-        # TODO
-        n = np.array()
+        v1 = self.b - self.a
+        v2 = self.c - self.a
+        n = np.array(np.cross(v1, v2))
         return n
 
     # Hint: First find the intersection on the plane
     # Later, find if the point is in the triangle using barycentric coordinates
     def intersect(self, ray: Ray):
-        #TODO
+        plane = Plane(self.normal,self.a)
+        intersection = plane.intersect(ray)
+        if intersection is None:
+            return None
+        areaABC = None # TODO calculate area of triangle, then calculate Barycentric Coordinates
         pass
 
 
