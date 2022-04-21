@@ -5,12 +5,20 @@ from utils import normalize, refleted
 
 class Object3D:
 
+    def __init__(self):
+        self.normal = None
+        raise NotImplementedError("Not Implemented - abstract class")
+
+
     def set_material(self, ambient, diffuse, specular, shininess, reflection):
         self.ambient = ambient
         self.diffuse = diffuse
         self.specular = specular
         self.shininess = shininess
         self.reflection = reflection
+    
+    def intersect(self, ray: Ray):
+        raise NotImplementedError("Not Implemented - abstract class")
 
 
 class Plane(Object3D):
