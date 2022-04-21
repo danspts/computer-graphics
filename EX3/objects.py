@@ -64,8 +64,19 @@ class Sphere(Object3D):
         self.radius = radius
 
     def intersect(self, ray: Ray):
-        #TODO
-        pass
+        a = np.dot(ray.direction,ray.direction)
+        distance = ray.origin - self.center
+        b = 2 * np.dot(ray.direction, distance)
+        c = np.dot(distance, distance) - self.radius * self.radius
+        disc = b * b - 4 * a * c
+        if disc > 0:
+            distSqrt = np.sqrt(disc)
+            q = (-b - distSqrt) / 2.0 if b < 0 else (-b + distSqrt) / 2.0
+            t0 = q / a
+            t1 = c / q
+            t0, t1 = min(t0, t1), max(t0, t1)
+            return t1 if t1 >= 0 and t0 < 0 else t0
+        return None
 
 
 class Mesh(Object3D):
@@ -74,12 +85,9 @@ class Mesh(Object3D):
     def __init__(self, v_list, f_list):
         self.v_list = v_list
         self.f_list = f_list
-        self.triangle_list = self.create_triangle_list()
-
-    def create_triangle_list(self):
-        l = []
-        # TODO
-        return l
+        self.triangle_list = []
+        for p1, p2, p3 in self.f_list:
+            self.triangle_list.append(Triangle(self.v_list[p1], self.v_list[p2], self.v_list[p3]))
 
     def apply_materials_to_triangles(self):
         for t in self.triangle_list:
@@ -88,5 +96,7 @@ class Mesh(Object3D):
     # Hint: Intersect returns both distance and nearest object.
     # Keep track of both.
     def intersect(self, ray: Ray):
-        #TODO
-        pass
+        for triangle in self.triangle_list:
+            if d := triangle.intersect(ray):
+                return d, triangle
+        return None
