@@ -24,31 +24,29 @@ def ray_trace(ray: Ray, ambient, lights : List[LightSource], objects : List[Obje
     color = np.zeros(3)
     if max_depth <= 0:
         return color
-    min_distance, nearest_object = ray.nearest_intersected_object(objects)
+    t, nearest_object = ray.nearest_intersected_object(objects)
     if nearest_object is None:
         return color
     color = ambient * nearest_object.ambient
-    intersection = ray.origin + min_distance * ray.direction 
-    normal_to_surface = nearest_object.normal(intersection)
-    shifted_point = intersection + EPSILON * normal_to_surface
+    P = ray.origin + t * ray.direction 
+    n = nearest_object.normal(P)
+    shifted_P = ray.origin + (t - EPSILON) * ray.direction 
 
     for light in lights:
-        ray_to_light = light.get_light_ray(shifted_point)
+        ray_to_light = light.get_light_ray(shifted_P)
+        shadow_distance, _ = ray_to_light.nearest_intersected_object(objects)
 
-        min_distance, _ = ray_to_light.nearest_intersected_object(objects)
-        intersection_to_light_distance = light.get_distance_from_light(intersection)
-
-        if min_distance < intersection_to_light_distance:
+        if shadow_distance < light.get_distance_from_light(P):
             continue
 
-        recursion_ray = Ray(shifted_point, reflected(ray.direction, normal_to_surface))
-        intersection_to_camera = normalize(camera - intersection)
+        recursion_ray = Ray(shifted_P, reflected(ray_to_light.direction, n))
+        intersection_to_camera = normalize(camera - P)
         H = normalize(ray_to_light.direction + intersection_to_camera)
 
         color = (
             color
-            + nearest_object.diffuse * light.get_intensity(intersection) * np.dot(ray_to_light.direction, normal_to_surface)
-            + nearest_object.specular * light.get_intensity(intersection) * np.dot(normal_to_surface, H) ** nearest_object.shininess
+            + nearest_object.diffuse * light.get_intensity(P) * np.dot(ray_to_light.direction, n)
+            + nearest_object.specular * light.get_intensity(P) * n.dot(H) ** nearest_object.shininess
             + nearest_object.reflection * ray_trace(recursion_ray, ambient, lights, objects, camera, max_depth - 1)
         )
     return color

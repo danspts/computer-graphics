@@ -3,7 +3,7 @@ from typing import List, Tuple
 import numpy as np
 from numpy import linalg as LA
 
-EPSILON = 1e-5
+EPSILON = 1e-3
 
 # This function gets a vector and returns its normalized form.
 def normalize(vector):
@@ -31,10 +31,35 @@ class Object3D:
     def normal(self, point):
         raise NotImplementedError
 
+
+class Ray:
+    def __init__(self, origin, direction):
+        self.origin = origin
+        self.direction = direction
+
+    # The function is getting the collection of objects in the scene and looks for the one with minimum distance.
+    # The function should return the nearest object and its distance (in two different arguments)
+    def nearest_intersected_object(self, objects: List[Object3D]) -> Tuple[float, Object3D]:
+        nearest_object = None
+        min_distance = np.inf
+        for obj in objects:
+            dist_obj, component = obj.intersect(self)
+            if component is not None and dist_obj < min_distance:
+                nearest_object = component
+                min_distance = dist_obj
+        return min_distance, nearest_object
+
 class LightSource:
 
     def __init__(self, intensity):
         self.intensity = intensity
+    
+    def get_light_ray(self,intersection_point) -> Ray: raise NotImplementedError
+
+    def get_distance_from_light(self, intersection) -> float: raise NotImplementedError
+
+    def get_intensity(self, intersection) -> float: raise NotImplementedError
+
 
 
 class DirectionalLight(LightSource):
@@ -44,7 +69,7 @@ class DirectionalLight(LightSource):
         self.direction = normalize(direction)
 
     # This function returns the ray that goes from the light source to a point
-    def get_light_ray(self,intersection_point):
+    def get_light_ray(self,intersection_point) -> Ray:
         return Ray(intersection_point, self.direction)
 
 
@@ -69,8 +94,8 @@ class PointLight(LightSource):
         self.kq = kq
 
     # This function returns the ray that goes from the light source to a point
-    def get_light_ray(self,intersection):
-        return Ray(intersection,normalize(self.position - intersection))
+    def get_light_ray(self,intersection) -> Ray:
+        return Ray(intersection, normalize(self.position - intersection))
 
     # This function returns the distance from a point to the light source
     def get_distance_from_light(self,intersection):
@@ -92,22 +117,6 @@ class SpotLight(PointLight):
         return super().get_intensity(intersection) * np.dot(v, self.direction)
 
 
-class Ray:
-    def __init__(self, origin, direction):
-        self.origin = origin
-        self.direction = direction
-
-    # The function is getting the collection of objects in the scene and looks for the one with minimum distance.
-    # The function should return the nearest object and its distance (in two different arguments)
-    def nearest_intersected_object(self, objects: List[Object3D]) -> Tuple[float, Object3D]:
-        nearest_object = None
-        min_distance = np.inf
-        for obj in objects:
-            dist_obj, component = obj.intersect(self)
-            if component is not None and dist_obj < min_distance:
-                nearest_object = component
-                min_distance = dist_obj
-        return min_distance, nearest_object
 
 
 
@@ -137,7 +146,7 @@ class Triangle(Object3D):
         self.a = np.array(a)
         self.b = np.array(b)
         self.c = np.array(c)
-        self._normal = self.compute_normal()
+        self._normal =  self.compute_normal()
 
     def compute_normal(self):
         self.v_ab = self.b - self.a
@@ -167,7 +176,10 @@ class Triangle(Object3D):
             return None, None
 
         t = self.v_ac.dot(qvec) * inv_det
-        return t, self
+        if t > EPSILON:
+            return t, self
+        else:
+            return None, None
 
     def normal(self, point):
         return self._normal
