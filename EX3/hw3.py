@@ -16,11 +16,18 @@ def render_scene(camera, ambient, lights, objects, screen_size, max_depth):
         for j, x in enumerate(np.linspace(screen[0], screen[2], width)):
             pixel = np.array([x, y, 0])
             ray = Ray(camera, normalize(pixel - camera))
-            color = ray_trace(ray, ambient, lights, objects, camera, max_depth)
+            color = ray_trace(ray, ambient, lights, objects, max_depth)
             image[i, j] = np.clip(color, 0, 1)
     return image
 
-def ray_trace(ray: Ray, ambient, lights : List[LightSource], objects : List[Object3D], camera, max_depth : int):
+
+def ray_trace(
+    ray: Ray,
+    ambient,
+    lights: List[LightSource],
+    objects: List[Object3D],
+    max_depth: int,
+):
     color = np.zeros(3)
     if max_depth <= 0:
         return color
@@ -28,35 +35,33 @@ def ray_trace(ray: Ray, ambient, lights : List[LightSource], objects : List[Obje
     if nearest_object is None:
         return color
     color = ambient * nearest_object.ambient
-    P = ray.origin + t * ray.direction 
-    n = nearest_object.normal(P)
-    shifted_P = ray.origin + (t - EPSILON) * ray.direction 
-
+    P = ray.origin + t * ray.direction
+    n = normalize(nearest_object.normal(P))
+    if n.dot(ray.direction) > 0:
+        n *= -1.0
+    shifted_P = P + EPSILON * n
+    V = normalize(ray.origin - shifted_P)
     for light in lights:
         ray_to_light = light.get_light_ray(shifted_P)
-        shadow_distance, _ = ray_to_light.nearest_intersected_object(objects)
-
-        if shadow_distance < light.get_distance_from_light(P):
+        min_distance, _ = ray_to_light.nearest_intersected_object(objects)
+        if 0 < min_distance < light.get_distance_from_light(P):
             continue
-
-        recursion_ray = Ray(shifted_P, reflected(ray_to_light.direction, n))
-        intersection_to_camera = normalize(camera - P)
-        H = normalize(ray_to_light.direction + intersection_to_camera)
-
-        color = (
-            color
-            + nearest_object.diffuse * light.get_intensity(P) * np.dot(ray_to_light.direction, n)
-            + nearest_object.specular * light.get_intensity(P) * n.dot(H) ** nearest_object.shininess
-            + nearest_object.reflection * ray_trace(recursion_ray, ambient, lights, objects, camera, max_depth - 1)
-        )
-    return color
+        L = ray_to_light.direction
+        R = normalize(reflected(L, n))
+        color = color + np.multiply(light.get_intensity(P), (
+            nearest_object.diffuse * L.dot(n)
+            + nearest_object.specular * V.dot(R) ** nearest_object.shininess
+        ))
+    reflection_ray = Ray(shifted_P, normalize(reflected(V, n)))
+    return color + nearest_object.reflection * ray_trace(
+        reflection_ray, ambient, lights, objects, max_depth - 1
+    )
 
 
 # Write your own objects and lights
 # TODO
 def your_own_scene():
-    camera = np.array([0,0,1])
+    camera = np.array([0, 0, 1])
     lights = []
     objects = []
     return camera, lights, objects
-
