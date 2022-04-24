@@ -53,6 +53,38 @@ def ray_trace(ray: Ray, ambient: Tuple[float, float, float], lights: List[LightS
 # TODO
 def your_own_scene():
     camera = np.array([0, 0, 1])
-    lights = []
-    objects = []
-    return camera, lights, objects
+    
+    sphere_a = Sphere([-0.5, 0.2, -3],0.8)
+    sphere_a.set_material([0.93, 1, 0.54], [0.93, 1, 0.54], [0.3, 0.3, 0.3], 100, 1, 0, 1.333)
+    
+    sphere_b = Sphere([-0.7, 0, -1.5],0.3)
+    sphere_b.set_material([0, 1, 0], [0, 1, 0], [0.3, 0.3, 0.3], 100, 0.2)
+    
+    p1 = [0.2,0.2,-0.5]
+    p2 = [0,0.6,0]
+    
+    v_list = [[0,0,0], p1, p2, rotation_z(p1, -72), rotation_z(p2, 72),
+              rotation_z(p1, 72), rotation_z(p2,72*2), rotation_z(p1,72*2),
+              rotation_z(p2,-72), rotation_z(p1,-72*2),rotation_z(p2,-72*2)]
+    f_list = [[0,1,2], [0,1,4], [0,4,5], [0,5,6], [0,6,7],
+              [0,2,3], [0,3,8], [0,8,9], [0,9,10], [0,10,7]]
+    
+    mesh = Mesh(v_list, f_list)
+    mesh.set_material([1, 1, 0.22], [1, 1, 0.21], [1, 1, 1], 10, 0.5)
+    mesh.apply_materials_to_triangles()
+    
+    floor = Plane([0,1,0], [0,-0.3,0])
+    floor.set_material([0.2, 0.2, 0.2], [0.2, 0.2, 0.2], [1, 1, 1], 1000, 0.5)
+    background = Plane([0,0,1], [0,0,-10])
+    background.set_material([0.4, 1, 0.9], [0.5, 1, 1], [0, 0, 0], 1000, 0.5)
+    
+    objects = [mesh, background]#sphere_a, sphere_b, floor, background]
+
+    light1 = PointLight(intensity= np.array([1, 1, 1]),position=np.array([0.6,0.5,-5]),kc=0.1,kl=0.1,kq=0.1)
+    light2 = DirectionalLight(intensity= np.array([0.8, 0.8, 0.8]),direction=np.array([1,1,1]))
+
+    lights = [light1, light2]
+
+    ambient = np.array([0.1,0.2,0.3])
+
+    return camera, lights, objects, ambient

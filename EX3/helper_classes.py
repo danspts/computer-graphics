@@ -238,6 +238,12 @@ class Mesh(Object3D):
         return ray.nearest_intersected_object(self.triangle_list)
 
 
+def rotation_z(point: Tuple[float, float, float], degrees: float):
+    deg = np.deg2rad(degrees)
+    matrix = np.array([[np.cos(deg), np.sin(deg), 0], [-np.sin(deg), np.cos(deg), 0], [0, 0, 1]])
+    return (matrix @ np.array(point))
+
+
 def read_obj(filename: str) -> Mesh:
     vectors = []
     faces = []
