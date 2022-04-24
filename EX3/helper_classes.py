@@ -230,6 +230,8 @@ class Mesh(Object3D):
                 self.specular,
                 self.shininess,
                 self.reflection,
+                self.refraction,
+                self.refraction_index,
             )
 
     # Hint: Intersect returns both distance and nearest object.
