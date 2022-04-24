@@ -2,8 +2,10 @@ from typing import List, Tuple
 
 import numpy as np
 from numpy import linalg as LA
+import re
 
-EPSILON = 1e-3
+EPSILON = 1e-5
+AIR_REFRACTION = 1
 
 # This function gets a vector and returns its normalized form.
 def normalize(vector):
@@ -15,27 +17,29 @@ def normalize(vector):
 # This function returns the vector that reflects from the surface
 def reflected(vector, normal):
     n = normalize(normal)
-    return vector - 2 * (vector @ n) * n
+    return vector - 2 * vector.dot(n) * n
+
 
 ## Lights
-
 class Object3D:
-
-    def set_material(self, ambient, diffuse, specular, shininess, reflection):
-        self.ambient = ambient
-        self.diffuse = diffuse
-        self.specular = specular
+    def set_material(self, ambient, diffuse, specular, shininess, reflection, refraction=None, refraction_index=1):
+        self.ambient = np.float64(ambient)
+        self.diffuse = np.float64(diffuse)
+        self.specular = np.float64(specular)
         self.shininess = shininess
         self.reflection = reflection
+        self.refraction = refraction
+        self.refraction_index = refraction_index
 
     def normal(self, point):
         raise NotImplementedError
 
 
 class Ray:
-    def __init__(self, origin, direction):
+    def __init__(self, origin, direction, refraction_index=AIR_REFRACTION):
         self.origin = origin
-        self.direction = direction
+        self.direction = normalize(direction)
+        self.refraction_index = refraction_index
 
     # The function is getting the collection of objects in the scene and looks for the one with minimum distance.
     # The function should return the nearest object and its distance (in two different arguments)
@@ -49,43 +53,53 @@ class Ray:
                 min_distance = dist_obj
         return min_distance, nearest_object
 
-class LightSource:
+    def calc_refraction(self, obj: Object3D, P, N):
+        cos_theta = N @ self.direction
+        sin_theta_1 = np.sqrt(1 - cos_theta * cos_theta)
+        r = self.refraction_index / obj.refraction_index
+        sin_theta_2 = r * sin_theta_1
+        cos_theta_2 = np.sqrt(1 - sin_theta_2 * sin_theta_2)
+        L = ((r * cos_theta - cos_theta_2) * N - self.direction) / r
+        if self.refraction_index == AIR_REFRACTION:
+            new_index = obj.refraction_index  # enters new medium
+        else:
+            new_index = AIR_REFRACTION
+        return Ray(P, L, new_index)
 
+
+class LightSource:
     def __init__(self, intensity):
         self.intensity = intensity
-    
-    def get_light_ray(self,intersection_point) -> Ray: raise NotImplementedError
 
-    def get_distance_from_light(self, intersection) -> float: raise NotImplementedError
+    def get_light_ray(self, intersection_point) -> Ray:
+        raise NotImplementedError
 
-    def get_intensity(self, intersection) -> float: raise NotImplementedError
+    def get_distance_from_light(self, intersection) -> float:
+        raise NotImplementedError
 
+    def get_intensity(self, intersection) -> float:
+        raise NotImplementedError
 
 
 class DirectionalLight(LightSource):
-
     def __init__(self, intensity, direction):
         super().__init__(intensity)
         self.direction = normalize(direction)
 
     # This function returns the ray that goes from the light source to a point
-    def get_light_ray(self,intersection_point) -> Ray:
+    def get_light_ray(self, intersection_point) -> Ray:
         return Ray(intersection_point, self.direction)
-
 
     # This function returns the distance from a point to the light source
     def get_distance_from_light(self, intersection):
         return np.inf
-
 
     # This function returns the light intensity at a point
     def get_intensity(self, intersection):
         return self.intensity
 
 
-
 class PointLight(LightSource):
-
     def __init__(self, intensity, position, kc, kl, kq):
         super().__init__(intensity)
         self.position = np.array(position)
@@ -94,17 +108,17 @@ class PointLight(LightSource):
         self.kq = kq
 
     # This function returns the ray that goes from the light source to a point
-    def get_light_ray(self,intersection) -> Ray:
+    def get_light_ray(self, intersection) -> Ray:
         return Ray(intersection, normalize(self.position - intersection))
 
     # This function returns the distance from a point to the light source
-    def get_distance_from_light(self,intersection):
+    def get_distance_from_light(self, intersection):
         return np.linalg.norm(intersection - self.position)
 
     # This function returns the light intensity at a point
     def get_intensity(self, intersection):
         d = self.get_distance_from_light(intersection)
-        return self.intensity / (self.kc + self.kl*d + self.kq * d * d)
+        return self.intensity / (self.kc + self.kl * d + self.kq * d * d)
 
 
 class SpotLight(PointLight):
@@ -117,19 +131,17 @@ class SpotLight(PointLight):
         return super().get_intensity(intersection) * np.dot(v, self.direction)
 
 
-
-
-
-
-
 class Plane(Object3D):
     def __init__(self, normal, point):
-        self._normal = np.array(normal)
-        self.point = np.array(point)
+        self._normal = normalize(np.array(normal, dtype=np.float64))
+        self.point = np.array(point, dtype=np.float64)
 
     def intersect(self, ray: Ray):
         v = self.point - ray.origin
-        t = (np.dot(v, self._normal) / np.dot(self._normal, ray.direction))
+        denom = np.dot(self._normal, ray.direction)
+        if abs(denom) < EPSILON:
+            return None, None
+        t = np.dot(v, self._normal) / denom
         if t > 0:
             return t, self
         else:
@@ -139,43 +151,41 @@ class Plane(Object3D):
         return self._normal
 
 
-
 class Triangle(Object3D):
     # Triangle gets 3 points as arguments
     def __init__(self, a, b, c):
-        self.a = np.array(a)
-        self.b = np.array(b)
-        self.c = np.array(c)
-        self._normal =  self.compute_normal()
+        self.a = np.array(a, dtype=np.float64)
+        self.b = np.array(b, dtype=np.float64)
+        self.c = np.array(c, dtype=np.float64)
+        self._normal = self.compute_normal()
 
     def compute_normal(self):
         self.v_ab = self.b - self.a
         self.v_ac = self.c - self.a
-        n =  np.cross(self.v_ab, self.v_ac)
+        n = np.cross(self.v_ab, self.v_ac)
         return normalize(n)
 
-    # Hint: First find the intersection on the plane
-    # Later, find if the point is in the triangle using barycentric coordinates
     def intersect(self, ray: Ray):
-        pvec = np.cross(ray.direction, self.v_ac)
-        det = self.v_ab.dot(pvec)
+        # Möller–Trumbore intersection
+        p = np.cross(ray.direction, self.v_ac)
+        det = self.v_ab.dot(p)
 
         if abs(det) < EPSILON:  # no intersection
             return None, None
 
         inv_det = 1.0 / det
-        tvec = ray.origin - self.a
-        u = tvec.dot(pvec) * inv_det
+        r = ray.origin - self.a
+        u = r.dot(p) * inv_det
 
-        if u < 0.0 or u > 1.0:  # if not intersection
+        if u < 0 or u > 1:  # if not intersection
             return None, None
 
-        qvec = np.cross(tvec, self.v_ab)
-        v = ray.direction.dot(qvec) * inv_det
+        q = np.cross(r, self.v_ab)
+        v = ray.direction.dot(q) * inv_det
         if v < 0.0 or u + v > 1.0:  # if not intersection
             return None, None
 
-        t = self.v_ac.dot(qvec) * inv_det
+        t = self.v_ac.dot(q) * inv_det
         if t > EPSILON:
             return t, self
         else:
@@ -184,28 +194,22 @@ class Triangle(Object3D):
     def normal(self, point):
         return self._normal
 
+
 class Sphere(Object3D):
     def __init__(self, center, radius: float):
         self.center = center
         self.radius = radius
 
     def intersect(self, ray: Ray):
-        a = np.dot(ray.direction, ray.direction)
-        distance = ray.origin - self.center
-        b = 2 * np.dot(ray.direction, distance)
-        c = np.dot(distance, distance) - self.radius * self.radius
-        disc = b * b - 4 * a * c
-        if disc > 0:
-            distSqrt = np.sqrt(disc)
-            q = (-b - distSqrt) / 2.0 if b < 0 else (-b + distSqrt) / 2.0
-            t0 = q / a
-            t1 = c / q
-            t0, t1 = min(t0, t1), max(t0, t1)
-            return t1 if t1 >= 0 and t0 < 0 else t0, self
+        _r = self.center - ray.origin
+        if (v := _r.dot(ray.direction)) >= 0:
+            if (d_2 := _r @ _r - v * v) >= 0:
+                if (diff := self.radius * self.radius - d_2) >= 0:
+                    return v - np.sqrt(diff), self
         return None, None
 
     def normal(self, point):
-        return point - self.center
+        return normalize(point - self.center)
 
 
 class Mesh(Object3D):
@@ -214,17 +218,37 @@ class Mesh(Object3D):
     def __init__(self, v_list, f_list):
         self.v_list = v_list
         self.f_list = f_list
-        self.triangle_list : List[Triangle] = []
+        self.triangle_list: List[Triangle] = []
         for p1, p2, p3 in self.f_list:
-            self.triangle_list.append(
-                Triangle(self.v_list[p1], self.v_list[p2], self.v_list[p3])
-            )
+            self.triangle_list.append(Triangle(self.v_list[p1], self.v_list[p2], self.v_list[p3]))
 
     def apply_materials_to_triangles(self):
         for t in self.triangle_list:
-            t.set_material(self.ambient,self.diffuse,self.specular,self.shininess,self.reflection)
+            t.set_material(
+                self.ambient,
+                self.diffuse,
+                self.specular,
+                self.shininess,
+                self.reflection,
+            )
 
     # Hint: Intersect returns both distance and nearest object.
     # Keep track of both.
     def intersect(self, ray: Ray):
         return ray.nearest_intersected_object(self.triangle_list)
+
+
+def read_obj(filename: str) -> Mesh:
+    vectors = []
+    faces = []
+    with open(filename, "r") as reader:
+        for l in reader:
+            args = re.findall(r"\S+", l)
+            if not args:
+                continue
+            match args[0]:
+                case "v":
+                    vectors.append(args[1:])
+                case "f":
+                    faces.append(args[1:])
+    return Mesh(np.array(vectors, float), np.array(faces, int) - 1)
