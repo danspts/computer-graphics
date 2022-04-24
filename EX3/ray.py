@@ -3,6 +3,8 @@ from typing import Tuple
 import numpy as np
 
 from objects import Object3D
+
+
 class Ray:
     def __init__(self, origin, direction):
         self.origin = origin
@@ -15,6 +17,6 @@ class Ray:
         min_distance = np.inf
         for obj in objects:
             dist_obj = obj.intersect(self)
-            if dist_obj is not None  and dist_obj < min_distance:
+            if dist_obj is not None and dist_obj < min_distance:
                 nearest_object = dist_obj
         return nearest_object, min_distance

@@ -32,19 +32,20 @@ def render_scene(camera, ambient, lights, objects, screen_size, max_depth):
                 if not traced:
                     break
                 obj, M, N, col_ray = traced
-                ray = Ray( M + N * EPSILON, reflected(ray.direction, N))
+                ray = Ray(M + N * EPSILON, reflected(ray.direction, N))
                 col += reflection * col_ray
                 reflection *= obj.reflection
             # We clip the values between 0 and 1 so all pixel values will make sense.
-            image[i, j] = np.clip(color,0,1)
+            image[i, j] = np.clip(color, 0, 1)
 
     return image
 
-def trace_ray(ray: Ray, objects : List[Object3D], lights: List[LightSource], camera, ambient):
+
+def trace_ray(ray: Ray, objects: List[Object3D], lights: List[LightSource], camera, ambient):
     # Find first point of intersection with the scene.
     obj, t = ray.nearest_intersected_object(objects)
     # Return None if the ray does not intersect any object.
-    if not obj: 
+    if not obj:
         return None
     P = ray.origin + t * ray.direction
     # Find properties of the object.
@@ -68,14 +69,10 @@ def trace_ray(ray: Ray, objects : List[Object3D], lights: List[LightSource], cam
     return obj, P, n, col_ray
 
 
-
-
 # Write your own objects and lights
 # TODO
 def your_own_scene():
-    camera = np.array([0,0,1])
+    camera = np.array([0, 0, 1])
     lights = []
     objects = []
     return camera, lights, objects
-
-

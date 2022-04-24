@@ -55,16 +55,16 @@ class Ray:
 
     def calc_refraction(self, obj: Object3D, P, N):
         cos_theta = N @ self.direction
-        sin_theta_1 = np.sqrt(1 - cos_theta * cos_theta)
+        sin_theta = np.sqrt(1 - cos_theta * cos_theta)
         r = self.refraction_index / obj.refraction_index
-        sin_theta_2 = r * sin_theta_1
-        cos_theta_2 = np.sqrt(1 - sin_theta_2 * sin_theta_2)
-        L = ((r * cos_theta - cos_theta_2) * N - self.direction) / r
+        sin_alpha = r * sin_theta
+        cos_alpha = np.sqrt(1 - sin_alpha * sin_alpha)
+        L = ((r * cos_theta - cos_alpha) * N - self.direction) / r
         if self.refraction_index == AIR_REFRACTION:
             new_index = obj.refraction_index  # enters new medium
         else:
             new_index = AIR_REFRACTION
-        return Ray(P, L, new_index)
+        return Ray(P - 2 * EPSILON * N, L, new_index)
 
 
 class LightSource:
@@ -243,7 +243,7 @@ class Mesh(Object3D):
 def rotation_z(point: Tuple[float, float, float], degrees: float):
     deg = np.deg2rad(degrees)
     matrix = np.array([[np.cos(deg), np.sin(deg), 0], [-np.sin(deg), np.cos(deg), 0], [0, 0, 1]])
-    return (matrix @ np.array(point))
+    return matrix @ np.array(point)
 
 
 def read_obj(filename: str) -> Mesh:
