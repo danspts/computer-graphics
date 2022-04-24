@@ -21,40 +21,31 @@ def render_scene(camera, ambient, lights, objects, screen_size, max_depth):
     return image
 
 
-def ray_trace(
-    ray: Ray,
-    ambient,
-    lights: List[LightSource],
-    objects: List[Object3D],
-    max_depth: int,
-):
+def ray_trace(ray: Ray, ambient: Tuple[float, float, float], lights: List[LightSource], objects: List[Object3D], max_depth: int):
     color = np.zeros(3)
     if max_depth <= 0:
         return color
-    t, nearest_object = ray.nearest_intersected_object(objects)
-    if nearest_object is None:
+    t, obj = ray.nearest_intersected_object(objects)
+    if obj is None and t > 0:
         return color
-    color = ambient * nearest_object.ambient
-    P = ray.origin + t * ray.direction
-    n = normalize(nearest_object.normal(P))
-    if n.dot(ray.direction) > 0:
-        n *= -1.0
-    shifted_P = P + EPSILON * n
-    V = normalize(ray.origin - shifted_P)
+    color += ambient * obj.ambient
+    P = ray.origin + t * ray.direction  # intersection
+    n = obj.normal(P)
+    if n @ ray.direction > 0:  # ray must be in the opposite direction from the normal
+        n *= -1
+    V = reflected(ray.direction, n)
+    _P = P + EPSILON * n
     for light in lights:
-        ray_to_light = light.get_light_ray(shifted_P)
-        min_distance, _ = ray_to_light.nearest_intersected_object(objects)
-        if 0 < min_distance < light.get_distance_from_light(P):
+        ray_to_light = light.get_light_ray(_P)
+        d, _ = ray_to_light.nearest_intersected_object(objects)
+        if d and d < light.get_distance_from_light(_P):
             continue
-        L = ray_to_light.direction
-        R = normalize(reflected(L, n))
-        color = color + np.multiply(light.get_intensity(P), (
-            nearest_object.diffuse * L.dot(n)
-            + nearest_object.specular * V.dot(R) ** nearest_object.shininess
-        ))
-    reflection_ray = Ray(shifted_P, normalize(reflected(V, n)))
-    return color + nearest_object.reflection * ray_trace(
-        reflection_ray, ambient, lights, objects, max_depth - 1
+        L = ray_to_light.direction  # Reflection of the vector from intersection to light
+        color += light.get_intensity(_P) * (L @ n * obj.diffuse + (L @ V) ** obj.shininess * obj.specular)
+    return (
+        color
+        + obj.reflection * ray_trace(ray.calc_refraction(obj, _P, n), ambient, lights, objects, max_depth - 1) if obj.reflection else 0
+        + obj.refraction * ray_trace(Ray(_P, V), ambient, lights, objects, max_depth - 1) if obj.refraction else 0
     )
 
 
