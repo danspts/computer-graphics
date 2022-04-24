@@ -44,8 +44,8 @@ def ray_trace(ray: Ray, ambient: Tuple[float, float, float], lights: List[LightS
         color += light.get_intensity(_P) * (L @ n * obj.diffuse + (L @ V) ** obj.shininess * obj.specular)
     return (
         color
-        + obj.reflection * ray_trace(ray.calc_refraction(obj, _P, n), ambient, lights, objects, max_depth - 1) if obj.reflection else 0
-        + obj.refraction * ray_trace(Ray(_P, V), ambient, lights, objects, max_depth - 1) if obj.refraction else 0
+        + obj.reflection * ray_trace(Ray(_P, V), ambient, lights, objects, max_depth - 1) if obj.reflection else 0
+        # + obj.refraction * ray_trace(ray.calc_refraction(obj, _P, n), ambient, lights, objects, max_depth - 1) if obj.refraction else 0
     )
 
 
