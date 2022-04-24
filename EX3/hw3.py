@@ -34,8 +34,8 @@ def render_scene(camera, ambient, lights, objects, screen_size, max_depth, rende
     return image
 
 
-def render_scene_blinn(*args):
-    return render_scene(*args, render_model=RenderModel.blinn_phong)
+def render_scene_blinn(*args, **kwargs):
+    return render_scene(*args, render_model=RenderModel.blinn_phong, **kwargs)
 
 
 def ray_trace(

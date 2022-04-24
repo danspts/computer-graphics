@@ -59,7 +59,7 @@ class Ray:
         r = self.refraction_index / obj.refraction_index
         sin_alpha = r * sin_theta
         cos_alpha = np.sqrt(1 - sin_alpha * sin_alpha)
-        L =  r * (cos_theta * N - self.direction) - cos_alpha * N
+        L = r * (cos_theta * N - self.direction) - cos_alpha * N
         if self.refraction_index == AIR_REFRACTION:
             new_index = obj.refraction_index  # enters new medium
         else:
