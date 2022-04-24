@@ -63,20 +63,18 @@ def ray_trace(
         ray_to_light = light.get_light_ray(_P)
         d, _ = ray_to_light.nearest_intersected_object(objects)
         if d and d < light.get_distance_from_light(_P):
-            if _ is obj:
-                raise ValueError
             continue
         L = ray_to_light.direction  # Reflection of the vector from intersection to light
         color += light.get_intensity(_P) * (
             L @ n * obj.diffuse + model_func(n, ray.direction, L, V, obj.shininess) * obj.specular
         )
-    return (
-        color + obj.reflection * ray_trace(Ray(_P, V), ambient, lights, objects, max_depth - 1, model_func)
-        if obj.reflection
-        else 0 + obj.refraction * ray_trace(ray.calc_refraction(obj, _P, n), ambient, lights, objects, max_depth - 1, model_func)
-        if obj.refraction
-        else 0
-    )
+    if obj.reflection:
+        refractive_ray = Ray(_P, V, ray.refraction_index)
+        color += obj.reflection * ray_trace(refractive_ray, ambient, lights, objects, max_depth - 1, model_func)
+    if obj.refraction:
+        reflective_ray = ray.calc_refraction(obj, P, n)
+        color += obj.refraction * ray_trace(reflective_ray, ambient, lights, objects, max_depth - 1, model_func)
+    return color
 
 
 # Write your own objects and lights

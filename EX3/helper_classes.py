@@ -59,12 +59,12 @@ class Ray:
         r = self.refraction_index / obj.refraction_index
         sin_alpha = r * sin_theta
         cos_alpha = np.sqrt(1 - sin_alpha * sin_alpha)
-        L = ((r * cos_theta - cos_alpha) * N - self.direction) / r
+        L =  r * (cos_theta * N - self.direction) - cos_alpha * N
         if self.refraction_index == AIR_REFRACTION:
             new_index = obj.refraction_index  # enters new medium
         else:
             new_index = AIR_REFRACTION
-        return Ray(P - 2 * EPSILON * N, L, new_index)
+        return Ray(P - EPSILON * N, L, new_index)
 
 
 class LightSource:
