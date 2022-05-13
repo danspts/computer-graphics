@@ -113,7 +113,7 @@ def your_own_scene():
     background = Plane([0, 0, 1], [0, 0, -10])
     background.set_material([0.4, 1, 0.9], [0.5, 1, 1], [0, 0, 0], 1000, 0.5)
 
-    objects = [mesh, background, floor] + spheres  # , sphere_a, sphere_b, floor, background]
+    objects = [mesh, background, floor] + spheres
 
     light1 = PointLight(intensity=np.array([1, 1, 1]), position=np.array([0.6, 0.5, -5]), kc=0.1, kl=0.1, kq=0.1)
     light2 = DirectionalLight(intensity=np.array([0.8, 0.8, 0.8]), direction=np.array([1, 1, 1]))
