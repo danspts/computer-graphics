@@ -17,11 +17,16 @@ function degrees_to_radians(degrees)
 // Add here the rendering of your spaceship
 
 // This is a sample box.
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( {color: 0xaaaaaa} );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+// const cube = new THREE.Mesh( geometry, material );
+// scene.add( cube );
 
+
+// This is the Hull
+const cylinderGeometry = new THREE.CylinderGeometry( 2, 2, 6, 32 );
+const cylinder = new THREE.Mesh( cylinderGeometry, material );
+scene.add( cylinder );
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
@@ -40,7 +45,16 @@ const toggleOrbit = (e) => {
 	}
 }
 
+const toggleWireframe = (e) => {
+	if (e.key == "w"){
+		// scene.material.wireframe = !scene.material.wireframe;
+		cylinder.material.wireframe = !cylinder.material.wireframe;
+	}
+}
+
 document.addEventListener('keydown',toggleOrbit)
+document.addEventListener('keydown',toggleWireframe)
+
 
 //controls.update() must be called after any manual changes to the camera's transform
 controls.update();
