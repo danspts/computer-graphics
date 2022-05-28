@@ -7,12 +7,37 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+var textureURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/lroc_color_poles_1k.jpg"; 
+var displacementURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg"; 
+var worldURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/hipp8_s.jpg"
 
-function degrees_to_radians(degrees)
-{
-  var pi = Math.PI;
-  return degrees * (pi/180);
-}
+var textureLoader = new THREE.TextureLoader();
+var texture = textureLoader.load( textureURL );
+var displacementMap = textureLoader.load( displacementURL );
+var worldTexture = textureLoader.load( worldURL );
+
+var moonMaterial = new THREE.MeshPhongMaterial ( 
+  { color: 0xffffff ,
+  map: texture ,
+     displacementMap: displacementMap,
+  displacementScale: 0.06,
+  bumpMap: displacementMap,
+  bumpScale: 0.04,
+   reflectivity:0, 
+   shininess :0
+  } 
+
+);
+
+
+var worldGeometry = new THREE.SphereGeometry( 1000,60,60 );
+var worldMaterial = new THREE.MeshBasicMaterial ( 
+  { color: 0xffffff ,
+  map: worldTexture ,
+  side: THREE.BackSide
+  } 
+);
+var world = new THREE.Mesh( worldGeometry, worldMaterial );
 
 // Add here the rendering of your spaceship
 
@@ -24,7 +49,9 @@ const coneMat = new THREE.MeshPhongMaterial( {color: 0xa64d79} );
 const wingMat = new THREE.MeshPhongMaterial( {color: 0x16537e} );
 wingMat.side = THREE.DoubleSide;
 
+const orbit = new THREE.Object3D()
 const ship = new THREE.Object3D()
+orbit.add(ship)
 
 // Hull
 const hull = new THREE.Object3D()
@@ -83,9 +110,18 @@ const wingRotate = new THREE.Matrix4();
 
 // Planet
 const planet = new THREE.Object3D()
+orbit.add(planet)
+
 
 const sphereGeometry = new THREE.SphereGeometry( 5, 32, 16 );
-const sphere = new THREE.Mesh( sphereGeometry, material );
+const sphere = new THREE.Mesh( sphereGeometry, moonMaterial );
+
+const shipTranslate = new THREE.Matrix4();
+shipTranslate.makeTranslation(10,0,0);
+ship.applyMatrix4(shipTranslate)
+
+
+// 
 
 
 // const torusTranslate = new THREE.Matrix4();
@@ -97,12 +133,18 @@ const sphere = new THREE.Mesh( sphereGeometry, material );
 planet.add( sphere );
 
 // light
-const light = new THREE.AmbientLight( 0xffffff ); // soft white light
+const hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.7 );
+hemiLight.color.setHSL( 0.6, 1, 0.6 );
+hemiLight.groundColor.setHSL( 0.095, 1, 1 );
+hemiLight.position.set( 0, 0, -10 );
+
+
 
 // scene
-scene.add( ship );
-scene.add( planet );
-scene.add( light );
+scene.add(orbit);
+scene.add( world );
+scene.add( hemiLight );
+
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
