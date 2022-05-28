@@ -17,20 +17,25 @@ function degrees_to_radians(degrees)
 // Add here the rendering of your spaceship
 
 const material = new THREE.MeshBasicMaterial( {color: 0xaaaaaa} );
+const hullMat = new THREE.MeshBasicMaterial( {color:0xd0e0e3} );
+const windowMat = new THREE.MeshBasicMaterial( {color: 0x8e7cc3} );
+windowMat.side = THREE.BackSide;
+const coneMat = new THREE.MeshBasicMaterial( {color: 0xa64d79} );
+const wingMat = new THREE.MeshBasicMaterial( {color: 0x16537e} );
+wingMat.side = THREE.DoubleSide;
 
 const ship = new THREE.Object3D()
 
 // This is the Hull
-
 const hull = new THREE.Object3D()
 ship.add(hull)
 
 const cylinderGeometry = new THREE.CylinderGeometry( 2, 2, 6, 32 );
-const cylinder = new THREE.Mesh( cylinderGeometry, material );
+const cylinder = new THREE.Mesh( cylinderGeometry, hullMat );
 ship.add( cylinder );
 
 const coneGeometry = new THREE.ConeGeometry( 2, 2, 32 );
-const cone = new THREE.Mesh( coneGeometry, material );
+const cone = new THREE.Mesh( coneGeometry, coneMat );
 
 const coneTranslate = new THREE.Matrix4();
 coneTranslate.makeTranslation(0,4,0);
@@ -41,7 +46,7 @@ hull.add( cone );
 
 // Windows 
 const ringGeometry = new THREE.RingGeometry( 0.5, 0.75, 16, 100 );
-const ring_1 = new THREE.Mesh( ringGeometry, material );
+const ring_1 = new THREE.Mesh( ringGeometry, windowMat );
 const ring_2 = ring_1.clone();
 
 const torusTranslate = new THREE.Matrix4();
@@ -54,7 +59,6 @@ hull.add( ring_1 );
 hull.add( ring_2 );
 
 // Wings
-
 const shape = new THREE.Shape();
 
 const x = -2;
@@ -64,15 +68,13 @@ shape.moveTo(x - 2, y - 3);
 shape.lineTo(x, y - 3);
 shape.lineTo(x, y);
 
-const wingMaterial = new THREE.MeshBasicMaterial( {color: 0xaaaaaa} );
-wingMaterial.side = THREE.DoubleSide;
 const TriangleGeometry = new THREE.ShapeGeometry(shape);
 
 const nbWings = 6;
 
 const wingRotate = new THREE.Matrix4();
 
-[...Array(nbWings).keys()].map(i => [i, new THREE.Mesh( TriangleGeometry, wingMaterial )])
+[...Array(nbWings).keys()].map(i => [i, new THREE.Mesh( TriangleGeometry, wingMat )])
 .map(function([i, wing_ob]){
 	wingRotate.makeRotationY(i * 2 * Math.PI / nbWings);
 	wing_ob.applyMatrix4(wingRotate);
@@ -81,7 +83,7 @@ const wingRotate = new THREE.Matrix4();
 .map(elem => ship.add(elem));
 
 // scene
-scene.add( ship);
+scene.add( ship );
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
@@ -103,7 +105,13 @@ const toggleOrbit = (e) => {
 const toggleWireframe = (e) => {
 	if (e.key == "w"){
 		// scene.material.wireframe = !scene.material.wireframe;
-		cylinder.material.wireframe = !cylinder.material.wireframe;
+		material.wireframe = !material.wireframe;
+		hullMat.wireframe = !hullMat.wireframe;
+		windowMat.wireframe = !windowMat.wireframe;
+		coneMat.wireframe = !coneMat.wireframe;
+		wingMat.wireframe = !wingMat.wireframe;
+
+		// cylinder.material.wireframe = !cylinder.material.wireframe;
 	}
 }
 
