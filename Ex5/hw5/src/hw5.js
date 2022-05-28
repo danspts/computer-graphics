@@ -151,7 +151,14 @@ anim1.multiply(anim1Rotate);
 anim1.multiply(anim1Translate.invert());
 
 // for animation '2' - rotate around the Y axis
-
+const anim2Translate = new THREE.Matrix4();
+anim2Translate.makeTranslation(orbit.position.x,0,0);
+const anim2Rotate = new THREE.Matrix4();
+anim2Rotate.makeRotationX(degrees_to_radians(-1));
+let anim2 = new THREE.Matrix4().identity();
+anim2.multiply(anim2Translate);
+anim2.multiply(anim2Rotate);
+anim2.multiply(anim2Translate.invert());
 
 // scene
 scene.add(orbit);
@@ -196,9 +203,16 @@ const toggleAnim1 = (e) => {
 	}
 }
 
+const toggleAnim2 = (e) => {
+	if (e.key == "2"){
+		isAnim2Enabled = !isAnim2Enabled;
+	}
+}
+
 document.addEventListener('keydown',toggleOrbit)
 document.addEventListener('keydown',toggleWireframe)
 document.addEventListener('keydown',toggleAnim1)
+document.addEventListener('keydown',toggleAnim2)
 
 
 //controls.update() must be called after any manual changes to the camera's transform
@@ -213,6 +227,10 @@ function animate() {
 
 	if (isAnim1Enabled){
 		ship.applyMatrix4(anim1);
+	}
+
+	if (isAnim2Enabled){
+		ship.applyMatrix4(anim2);
 	}
 
 	renderer.render( scene, camera );
