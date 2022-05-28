@@ -16,17 +16,17 @@ function degrees_to_radians(degrees)
 
 // Add here the rendering of your spaceship
 
-const material = new THREE.MeshBasicMaterial( {color: 0xaaaaaa} );
-const hullMat = new THREE.MeshBasicMaterial( {color:0xd0e0e3} );
-const windowMat = new THREE.MeshBasicMaterial( {color: 0x8e7cc3} );
+const material = new THREE.MeshPhongMaterial( {color: 0xaaaaaa} );
+const hullMat = new THREE.MeshPhongMaterial( {color:0xd0e0e3} );
+const windowMat = new THREE.MeshPhongMaterial( {color: 0x8e7cc3} );
 windowMat.side = THREE.BackSide;
-const coneMat = new THREE.MeshBasicMaterial( {color: 0xa64d79} );
-const wingMat = new THREE.MeshBasicMaterial( {color: 0x16537e} );
+const coneMat = new THREE.MeshPhongMaterial( {color: 0xa64d79} );
+const wingMat = new THREE.MeshPhongMaterial( {color: 0x16537e} );
 wingMat.side = THREE.DoubleSide;
 
 const ship = new THREE.Object3D()
 
-// This is the Hull
+// Hull
 const hull = new THREE.Object3D()
 ship.add(hull)
 
@@ -42,7 +42,6 @@ coneTranslate.makeTranslation(0,4,0);
 cone.applyMatrix4(coneTranslate);
 
 hull.add( cone );
-
 
 // Windows 
 const ringGeometry = new THREE.RingGeometry( 0.5, 0.75, 16, 100 );
@@ -82,8 +81,28 @@ const wingRotate = new THREE.Matrix4();
 })
 .map(elem => ship.add(elem));
 
+// Planet
+const planet = new THREE.Object3D()
+
+const sphereGeometry = new THREE.SphereGeometry( 5, 32, 16 );
+const sphere = new THREE.Mesh( sphereGeometry, material );
+
+
+// const torusTranslate = new THREE.Matrix4();
+// torusTranslate.makeTranslation(0,2,-2);
+// ring_1.applyMatrix4(torusTranslate);
+// torusTranslate.makeTranslation(0,0, -2);
+// ring_2.applyMatrix4(torusTranslate);
+
+planet.add( sphere );
+
+// light
+const light = new THREE.AmbientLight( 0xffffff ); // soft white light
+
 // scene
 scene.add( ship );
+scene.add( planet );
+scene.add( light );
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
@@ -110,8 +129,6 @@ const toggleWireframe = (e) => {
 		windowMat.wireframe = !windowMat.wireframe;
 		coneMat.wireframe = !coneMat.wireframe;
 		wingMat.wireframe = !wingMat.wireframe;
-
-		// cylinder.material.wireframe = !cylinder.material.wireframe;
 	}
 }
 
