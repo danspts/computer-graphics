@@ -133,6 +133,19 @@ const orbitTranslate = new THREE.Matrix4();
 orbitTranslate.makeTranslation(-4,5,2);
 orbit.applyMatrix4(orbitTranslate)
 
+// orbit tranformation matrices
+// for animation '1' - rotate around the X axis
+const anim1Translate = new THREE.Matrix4();
+anim1Translate.makeTranslation(4,-5,-2);
+const anim1Rotate = new THREE.Matrix4();
+anim1Rotate.makeRotationX(degreesToRadians(10));
+let anim1 = new THREE.Matrix4().identity();
+anim1 = anim1.multiply(orbitTranslate);
+anim1 = anim1.multiply(anim1Rotate);
+anim1 = anim1.multiply(anim1Translate);
+
+// for animation '2' - rotate around the Y axis
+
 
 // scene
 scene.add(orbit);
@@ -165,6 +178,7 @@ const toggleWireframe = (e) => {
 		windowMat.wireframe = !windowMat.wireframe;
 		coneMat.wireframe = !coneMat.wireframe;
 		wingMat.wireframe = !wingMat.wireframe;
+		moonMaterial.wireframe = !moonMaterial.wireframe;
 	}
 }
 
