@@ -16,17 +16,72 @@ function degrees_to_radians(degrees)
 
 // Add here the rendering of your spaceship
 
-// This is a sample box.
-// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
 const material = new THREE.MeshBasicMaterial( {color: 0xaaaaaa} );
-// const cube = new THREE.Mesh( geometry, material );
-// scene.add( cube );
 
+const ship = new THREE.Object3D()
 
 // This is the Hull
+
+const hull = new THREE.Object3D()
+ship.add(hull)
+
 const cylinderGeometry = new THREE.CylinderGeometry( 2, 2, 6, 32 );
 const cylinder = new THREE.Mesh( cylinderGeometry, material );
-scene.add( cylinder );
+ship.add( cylinder );
+
+const coneGeometry = new THREE.ConeGeometry( 2, 2, 32 );
+const cone = new THREE.Mesh( coneGeometry, material );
+
+const coneTranslate = new THREE.Matrix4();
+coneTranslate.makeTranslation(0,4,0);
+cone.applyMatrix4(coneTranslate);
+
+hull.add( cone );
+
+
+// Windows 
+const ringGeometry = new THREE.RingGeometry( 0.5, 0.75, 16, 100 );
+const ring_1 = new THREE.Mesh( ringGeometry, material );
+const ring_2 = ring_1.clone();
+
+const torusTranslate = new THREE.Matrix4();
+torusTranslate.makeTranslation(0,2,-2);
+ring_1.applyMatrix4(torusTranslate);
+torusTranslate.makeTranslation(0,0, -2);
+ring_2.applyMatrix4(torusTranslate);
+
+hull.add( ring_1 );
+hull.add( ring_2 );
+
+// Wings
+
+const shape = new THREE.Shape();
+
+const x = -2;
+const y = 0;
+
+shape.moveTo(x - 2, y - 3);
+shape.lineTo(x, y - 3);
+shape.lineTo(x, y);
+
+const wingMaterial = new THREE.MeshBasicMaterial( {color: 0xaaaaaa} );
+wingMaterial.side = THREE.DoubleSide;
+const TriangleGeometry = new THREE.ShapeGeometry(shape);
+
+const nbWings = 6;
+
+const wingRotate = new THREE.Matrix4();
+
+[...Array(nbWings).keys()].map(i => [i, new THREE.Mesh( TriangleGeometry, wingMaterial )])
+.map(function([i, wing_ob]){
+	wingRotate.makeRotationY(i * 2 * Math.PI / nbWings);
+	wing_ob.applyMatrix4(wingRotate);
+	return wing_ob;
+})
+.map(elem => ship.add(elem));
+
+// scene
+scene.add( ship);
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
