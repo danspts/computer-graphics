@@ -7,6 +7,12 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
 
+function degrees_to_radians(degrees)
+{
+  var pi = Math.PI;
+  return degrees * (pi/180);
+}
+
 var textureURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/lroc_color_poles_1k.jpg"; 
 var displacementURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg"; 
 var worldURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/hipp8_s.jpg"
@@ -136,13 +142,13 @@ orbit.applyMatrix4(orbitTranslate)
 // orbit tranformation matrices
 // for animation '1' - rotate around the X axis
 const anim1Translate = new THREE.Matrix4();
-anim1Translate.makeTranslation(4,-5,-2);
+anim1Translate.makeTranslation(0,orbit.position.y,0);
 const anim1Rotate = new THREE.Matrix4();
-anim1Rotate.makeRotationX(degreesToRadians(10));
+anim1Rotate.makeRotationY(degrees_to_radians(1));
 let anim1 = new THREE.Matrix4().identity();
-anim1 = anim1.multiply(orbitTranslate);
-anim1 = anim1.multiply(anim1Rotate);
-anim1 = anim1.multiply(anim1Translate);
+anim1.multiply(anim1Translate);
+anim1.multiply(anim1Rotate);
+anim1.multiply(anim1Translate.invert());
 
 // for animation '2' - rotate around the Y axis
 
@@ -163,6 +169,8 @@ renderer.render( scene, camera );
 const controls = new OrbitControls( camera, renderer.domElement );
 
 let isOrbitEnabled = true;
+let isAnim1Enabled = false;
+let isAnim2Enabled = false;
 
 const toggleOrbit = (e) => {
 	if (e.key == "o"){
@@ -182,8 +190,15 @@ const toggleWireframe = (e) => {
 	}
 }
 
+const toggleAnim1 = (e) => {
+	if (e.key == "1"){
+		isAnim1Enabled = !isAnim1Enabled;
+	}
+}
+
 document.addEventListener('keydown',toggleOrbit)
 document.addEventListener('keydown',toggleWireframe)
+document.addEventListener('keydown',toggleAnim1)
 
 
 //controls.update() must be called after any manual changes to the camera's transform
@@ -195,6 +210,10 @@ function animate() {
 
 	controls.enabled = isOrbitEnabled;
 	controls.update();
+
+	if (isAnim1Enabled){
+		ship.applyMatrix4(anim1);
+	}
 
 	renderer.render( scene, camera );
 
