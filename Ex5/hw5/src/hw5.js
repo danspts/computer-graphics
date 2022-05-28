@@ -118,17 +118,7 @@ const sphere = new THREE.Mesh( sphereGeometry, moonMaterial );
 
 const shipTranslate = new THREE.Matrix4();
 shipTranslate.makeTranslation(10,0,0);
-ship.applyMatrix4(shipTranslate)
-
-
-// 
-
-
-// const torusTranslate = new THREE.Matrix4();
-// torusTranslate.makeTranslation(0,2,-2);
-// ring_1.applyMatrix4(torusTranslate);
-// torusTranslate.makeTranslation(0,0, -2);
-// ring_2.applyMatrix4(torusTranslate);
+ship.applyMatrix4(shipTranslate);
 
 planet.add( sphere );
 
@@ -138,6 +128,10 @@ hemiLight.color.setHSL( 0.6, 1, 0.6 );
 hemiLight.groundColor.setHSL( 0.095, 1, 1 );
 hemiLight.position.set( 0, 0, -10 );
 
+// orbit translated since moon cannot be at the center
+const orbitTranslate = new THREE.Matrix4();
+orbitTranslate.makeTranslation(-4,5,2);
+orbit.applyMatrix4(orbitTranslate)
 
 
 // scene
