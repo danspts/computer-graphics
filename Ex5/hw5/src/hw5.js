@@ -2,7 +2,7 @@ import { OrbitControls } from './OrbitControls.js'
 
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
-let isOrbitEnabled = false;
+let isOrbitEnabled = true;
 let isAnim1Enabled = false;
 let isAnim2Enabled = false;
 let isAnim3Enabled = false;

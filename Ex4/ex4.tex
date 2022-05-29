@@ -1,0 +1,504 @@
+\documentclass{article}
+
+\usepackage[a4paper,hmargin=2cm,vmargin=2cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{layout}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{graphicx,verbatim,xspace,color, subcaption}
+\usepackage{fullpage}
+\usepackage{float}
+
+\floatstyle{boxed} \restylefloat{figure}
+
+\setlength{\oddsidemargin}{0pt}
+
+\begin{document}
+    \title{Exercise 4}
+    \author{227367455}
+    \date{}
+    \maketitle
+
+    \section*{Question 1}
+
+    Let $R_1 = \begin{bmatrix}
+        \cos \theta && - \sin \theta && 0 \\ 
+        \sin \theta && \cos \theta && 0 \\
+        0  && 0  && 1
+    \end{bmatrix}$, 
+    $R_2 = \begin{bmatrix}
+        \cos \alpha && - \sin \alpha && 0  \\ 
+        \sin \alpha && \cos \alpha && 0 \\
+        0  && 0  && 1
+
+    \end{bmatrix}$,
+    $R_3 = \begin{bmatrix}
+        \cos \beta && - \sin \beta && 0  \\ 
+        \sin \beta && \cos \beta && 0 \\
+        0  && 0  && 1
+
+    \end{bmatrix}$
+
+    \begin{enumerate}
+        \item Closure: Let $R_1, R_2$ be two rotations around the origin, prove that $R_1 \circ R_2$ is also a rotation around the origin.
+        $R_1 \circ R_2 = \begin{bmatrix}
+            \cos \theta && - \sin \theta && 0 \\ 
+            \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix} \circ
+        \begin{bmatrix}
+            \cos \alpha && - \sin \alpha && 0  \\ 
+            \sin \alpha && \cos \alpha && 0 \\
+            0  && 0  && 1
+        \end{bmatrix}$
+
+        $ =\begin{bmatrix}
+            \cos \theta \cos \alpha - \sin \theta \sin \alpha && - (\cos \theta \sin \alpha + \sin \theta \cos \alpha)  && 0 \\ 
+            \cos \theta \sin \alpha + \sin \theta \cos \alpha && \cos \theta \cos \alpha - \sin \theta \sin \alpha  && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix}$
+
+        $ = \begin{bmatrix}
+            \cos (\alpha + \theta)  && - \sin (\alpha + \theta) && 0 \\ 
+            \sin (\alpha + \theta) && \cos (\alpha + \theta) && 0  \\
+            0  && 0  && 1 
+        \end{bmatrix}$
+
+        2 successive rotations under $\theta$ and $\alpha$ is therefore closed under one rotation with angle $\alpha + \theta$ $\square$
+
+        \item Associativity: Let $R_1, R_2, R_3$ be three rotations around the origin, prove that $(R_1 \circ R_2) \circ R_3 $ =$R_1 \circ (R_2 \circ R_3) $
+        
+        $(R_1 \circ R_2) \circ R_3 = \Bigg (\begin{bmatrix}
+            \cos \theta && - \sin \theta && 0 \\ 
+            \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix} \circ
+        \begin{bmatrix}
+            \cos \alpha && - \sin \alpha && 0  \\ 
+            \sin \alpha && \cos \alpha && 0 \\
+            0  && 0  && 1
+        \end{bmatrix} \Bigg ) \circ \begin{bmatrix}
+            \cos \beta && - \sin \beta && 0  \\ 
+            \sin \beta && \cos \beta && 0 \\
+            0  && 0  && 1
+        \end{bmatrix}$
+
+        $ =\begin{bmatrix}
+            \cos (\alpha + \theta)  && - \sin (\alpha + \theta) && 0 \\ 
+            \sin (\alpha + \theta) && \cos (\alpha + \theta) && 0  \\
+            0  && 0  && 1 
+        \end{bmatrix} \circ \begin{bmatrix}
+            \cos \beta && - \sin \beta && 0  \\ 
+            \sin \beta && \cos \beta && 0 \\
+            0  && 0  && 1
+        \end{bmatrix}$ by Closure
+
+        $=\begin{bmatrix}
+            \cos (\alpha + \theta + \beta)  && - \sin (\alpha + \theta + \beta) && 0 \\ 
+            \sin (\alpha + \theta + \beta) && \cos (\alpha + \theta + \beta) && 0  \\
+            0  && 0  && 1 
+        \end{bmatrix}$ By Closure
+
+
+        $R_1 \circ (R_2 \circ R_3) = \begin{bmatrix}
+            \cos \theta && - \sin \theta && 0 \\ 
+            \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix} \circ \Bigg (
+            \begin{bmatrix}
+                \cos \alpha && - \sin \alpha && 0  \\ 
+                \sin \alpha && \cos \alpha && 0 \\
+                0  && 0  && 1
+            \end{bmatrix}  \circ \begin{bmatrix}
+                \cos \beta && - \sin \beta && 0  \\ 
+                \sin \beta && \cos \beta && 0 \\
+                0  && 0  && 1
+            \end{bmatrix}
+        \Bigg ) $
+        $= \begin{bmatrix}
+            \cos \theta && - \sin \theta && 0 \\ 
+            \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix} \circ 
+            \begin{bmatrix}
+                \cos (\alpha + \beta) && - \sin (\alpha + \beta) && 0  \\ 
+                \sin (\alpha + \beta) && \cos (\alpha + \beta) && 0 \\
+                0  && 0  && 1
+            \end{bmatrix}  $ By Closure
+
+        $=\begin{bmatrix}
+            \cos (\alpha + \theta + \beta)  && - \sin (\alpha + \theta + \beta) && 0 \\ 
+            \sin (\alpha + \theta + \beta) && \cos (\alpha + \theta + \beta) && 0  \\
+            0  && 0  && 1 
+        \end{bmatrix}$ By Closure
+
+        $\implies (R_1 \circ R_2) \circ R_3 $ =$R_1 \circ (R_2 \circ R_3) $ as needed $\square$
+
+        \item Identity element: Prove that there exists rotation around the origin $R_{id}$ s.t. for all rotations around the origin R it holds that $R \circ R_{id} = R_{id} \circ R = R$
+        
+        There exist an Identity rotation 
+
+        $\iff$ there exists an identity matrix representation $R_{id}$ 
+
+        $\iff$ $R_{id} = I_3$ 
+
+        $\iff$ $R_{id} = R_{\theta}$ st $\cos \theta = 1 \wedge \sin \theta = - \sin \theta = 0$ 
+
+        Clearly there exists such $\theta = 0 $ and therefore all the above holds $\square$
+
+        \item Inverse element: Prove that for every rotation around the origin R there exists R' which is also a rotation around the origin s.t. $R \circ R' = R' \circ R = R_{id}$. Given R, what is R'?
+        
+        Let $R = \begin{bmatrix}
+            \cos \theta && - \sin \theta && 0 \\ 
+            \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix}$
+        
+        $|R| = \cos^2 \theta - (- \sin^2 \theta) = 1$ so R is invertible
+
+        $R' = R^{-1} = \frac{1}{|R|} Adj(R) = \begin{bmatrix}
+            \cos \theta && \sin \theta && 0 \\ 
+            - \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix}$
+
+        Notice $\begin{bmatrix}
+            \cos \theta && \sin \theta && 0 \\ 
+            - \sin \theta && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix} = \begin{bmatrix}
+            \cos (\theta) && - \sin (- \theta) && 0 \\ 
+            \sin (-\theta) && \cos \theta && 0 \\
+            0  && 0  && 1 
+        \end{bmatrix}$ 
+        
+        This inverse rotation matrix can be represented with a rotation matrix with $\theta' = -\theta$
+
+        \item Now, show that all of the above are true for rotations around any single point (For example all the rotations around (1,1)) are a group.
+        
+        Let T be the translation matrix $T = \begin{bmatrix}
+            1 && 0 && - t_x \\ 
+            0 && 1 && - t_y \\
+            0 && 0 && 1 
+        \end{bmatrix}$ and its inverse is $T^{-1} = \begin{bmatrix}
+            1 && 0 && t_x \\ 
+            0 && 1 && t_y \\
+            0 && 0 && 1 
+        \end{bmatrix}$
+
+        We will show closure of rotation around the point $(t_x, t_y)$ as follows:
+
+        Closure:  $T \circ R_1 \circ T^{-1} \circ T \circ R_2 \circ T^{-1}$
+
+        $ = T \circ R_1 \circ R_2 \circ T^{-1}$ Since $R_1 \circ R_2$ is closed by 1a then we rotate $(t_x, t_y)$ by $R_1 \circ R_2$ $\square$
+        
+        Associativity: $(T \circ R_1 \circ T^{-1} \circ T \circ R_2 \circ T^{-1}) \circ T \circ R_3 \circ T^{-1}$
+
+        $ = T \circ (R_1 \circ R_2) \circ T^{-1} \circ T \circ R_3 \circ T^{-1}$
+
+        $ = T \circ (R_1 \circ R_2) \circ R_3 \circ T^{-1}$
+
+        $ = T \circ R_1 \circ (R_2 \circ R_3) \circ T^{-1}$ using associativity of rotation matrices 1b
+
+        $ = T \circ R_1 \circ T \circ T^{-1} \circ (R_2 \circ R_3) \circ T^{-1}$
+
+        $ = T \circ R_1 \circ T \circ T^{-1} \circ (R_2 \circ T^{-1} \circ T \circ R_3) \circ T^{-1}$
+
+        $ = T \circ R_1 \circ T \circ (T^{-1} \circ R_2 \circ T^{-1} \circ T \circ R_3 \circ T^{-1})$ as needed $\square$
+
+        Identity element:
+
+        $T \circ R \circ T^{-1} = I_3$
+
+        $\iff R \circ T^{-1} = I_3 \circ T^{-1}$
+
+        $\iff R = I_3 $ and we know such rotation matrix exists by 1c $\square$
+
+        Inverse element: Since T is invertible and R is invertible by 1d
+
+        $(T \circ R \circ T^{-1})^{-1} = T^{-1} \circ R^{-1} \circ T$ as needed $\square$
+    \end{enumerate}
+
+    \newpage
+
+    \section*{Question 2}
+
+    Write the matrices representing the following transformations. For each transformation right its specific type (linear/rigid/similarity/affine/projective)
+
+    \begin{enumerate}
+        \item Rotate 30° counterclockwise around the line $\ell(t) = (1, -2, 1) + t (\frac{1}{\sqrt{2}}, 0, - \frac{1}{\sqrt{2}})$ and uniformly scale by 1.5.
+        
+        $R_{x}(\frac{\pi}{6}) = \begin{bmatrix}
+            1 && 0 && 0 && 0 \\ 
+            0 && \frac{2}{\sqrt{3}} && - \frac{1}{2} && 0 \\ 
+            0 && \frac{1}{2}  && \frac{2}{\sqrt{3}} && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        $T = \begin{bmatrix}
+            1 && 0 && 0 && -1 \\ 
+            0 && 1 && 0 && 2 \\ 
+            0 && 0 && 1 && -1 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}, T^{-1} = \begin{bmatrix}
+            1 && 0 && 0 && 1 \\ 
+            0 && 1 && 0 && -2 \\ 
+            0 && 0 && 1 && 1 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+
+        $S = \begin{bmatrix}
+            1.5 && 0 && 0 && 0 \\ 
+            0 && 1.5 && 0 && 0 \\ 
+            0 && 0 && 1.5 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        $v_1 = (\frac{1}{\sqrt{2}}, 0, - \frac{1}{\sqrt{2}})$
+       
+        $v_2 = \frac{v_1 \times (0,0,1)}{|v_1 \times (0,0,1)|} = (0,1,0)$
+       
+        $v_3 = \frac{v_1 \times v_2}{|v_1 \times v_2|}= (\frac{1}{\sqrt{2}}, 0, \frac{1}{\sqrt{2}})$
+
+
+        $R = \begin{bmatrix}
+            \frac{1}{\sqrt{2}} && 0  && \frac{-1}{\sqrt{2}} && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            \frac{1}{\sqrt{2}} && 0 && \frac{1}{\sqrt{2}} && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        $F \Bigg (\begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix} \Bigg ) = T^{-1} \circ R^T \circ S \circ R_{x}(\frac{\pi}{6})  \circ R \circ  T \begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix}$ 
+
+        \paragraph{Similarity} because of S
+
+        \item Scale by 5 in the direction of $(3,1,-4)$ then shear by a factor of 0.2 in the Y direction (meaning after the shearing x'=x+0.2y,  z'=z+0.2y
+        
+        $v_1 = \frac{(3,1,-4)}{|(3,1,-4)|} = (\frac{3}{\sqrt{26}}, \frac{1}{\sqrt{26}}, \frac{-4}{\sqrt{26}})$
+
+        $v_2 = \frac{v_1 \times (0,0,1)}{|v_1 \times (0,0,1)|} = (\frac{1}{\sqrt{10}}, \frac{-3}{\sqrt{10}}, 0)$
+
+        $v_3 = \frac{v_1 \times v_2}{|v_1 \times v_2|}= (\frac{-6}{\sqrt{65}}, \frac{-4}{\sqrt{65}}, \frac{-5}{\sqrt{65}})$
+
+        $R = \begin{bmatrix}
+            \frac{3}{\sqrt{26}} && \frac{1}{\sqrt{26}} && \frac{-4}{\sqrt{26}} && 0 \\ 
+            \frac{1}{\sqrt{10}} && \frac{-3}{\sqrt{10}} &&  0 && 0 \\ 
+            \frac{-6}{\sqrt{65}} && \frac{-4}{\sqrt{65}} && \frac{-5}{\sqrt{65}} && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        B = $\begin{bmatrix}
+            5 && 0 && 0 && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            0 && 0 && 1 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+        
+        H = $\begin{bmatrix}
+            1 && 0.2 && 0 && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            0 && 0.2 && 1 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        $F \Bigg (\begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix} \Bigg ) = H \circ R^T \circ B \circ R  \begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix}$ 
+
+        \paragraph{Affine} because of H
+
+        \item Reflect around the $yz$ plane then translate in the (1,5,2) direction by a factor of 0.5
+        
+        T = $\begin{bmatrix}
+            1 && 0 && 0 && 0.5 \\ 
+            0 && 1 && 0 && 2.5 \\ 
+            0 && 0 && 1 && 1 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        R = $\begin{bmatrix}
+            -1 && 0 && 0 && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            0 && 0 && 1 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        $F \Bigg (\begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix} \Bigg ) =  T \circ R \begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix}$ 
+
+        \paragraph{Rigid} because every properties are kept
+
+        \item Scale uniformly by a factor of 0.3 then project (cavalier projection) on the XY plain with an angle of 45°
+        
+        U = $\begin{bmatrix}
+            0.3 && 0 && 0 && 0 \\ 
+            0 && 0.3 && 0 && 0 \\ 
+            0 && 0 && 0.3 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        P = $\begin{bmatrix}
+            1 && 0 && \frac{1}{\sqrt{2}} && 0 \\ 
+            0 && 1 && \frac{1}{\sqrt{2}} && 0 \\ 
+            0 && 0 && 0 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        $F \Bigg (\begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix} \Bigg ) = P \circ U  \begin{bmatrix}
+            x \\ y \\ z \\ 1
+        \end{bmatrix}$ 
+
+        \paragraph{Linear} because of P
+
+    \end{enumerate}
+
+    \newpage
+
+    \section*{Question 3}
+    \begin{enumerate}
+        \item This is an orthographic projection $\begin{bmatrix}
+            1 && 0 && 0 && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            0 && 0 && 0 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$ 
+
+        \item We see that the point (1,1,1) is projected to (1, 2, 0)
+        
+        $\phi = \frac{\pi}{2}$ special case where $x_p - x = 0 \wedge y_p - p \neq 0$
+
+        $d = \sqrt{(1 - 1)^2 + (2 - 1)^2} = 1$
+ 
+        $\begin{bmatrix}
+            1 && 0 && 0 && 0 \\ 
+            0 && 1 && 1 && 0 \\ 
+            0 && 0 && 0 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$ 
+
+        \item The point $(1,0,1)$ is projected to $(1.5, 0, 0)$
+    
+        $\phi = \tan^{-1} \frac{0}{0.5} = 0$
+
+        $d = \sqrt{(1.5 - 1)^2 + (0 - 0)^2} = 0.5$ 
+
+        $\begin{bmatrix}
+            1 && 0 && 0.5 && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            0 && 0 && 0 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$ 
+        
+        \item The point $(1,1,1)$ is projected to $(1.5, 1, 0)$
+        
+        $\phi = \tan^{-1} \frac{1}{1} = \frac{\pi}{4}$
+
+        $d = \sqrt{(2 - 1)^2 + (2 - 1)^2} = \sqrt{2}$
+
+        $\begin{bmatrix}
+            1 && 0 && 1 && 0 \\ 
+            0 && 1 && 1 && 0 \\ 
+            0 && 0 && 0 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$
+
+        \item The point $(1,1,1)$ is projected to $(1.5, 1, 0)$
+                
+        $d = \sqrt{(1.42 - 1)^2 + (1.14 -1)^2} = 0.4427$
+
+        $\phi = \tan^{-1}\frac{0.14}{0.42} = 0.32175$ rad
+
+        $\begin{bmatrix}
+            1 && 0 && 0.42 && 0 \\ 
+            0 && 1 && 0.14 && 0 \\ 
+            0 && 0 && 0 && 0 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$ 
+    \end{enumerate}
+
+    \newpage
+
+    \section*{Question 4}
+    \begin{enumerate}
+        \item Project (perspective) a scene with C.O.P=(0,0,0) and a viewing plane z=-3. The line l=(14,2,-7)+t(1,3,0). What is the parametric representation of the line after the projection, $l_p$?
+        
+        $\ell_x(t) = \frac{-(14 + t) (-3)}{7}, \ell_y(t) = \frac{-(2 + 3t)(-3)}{7}, \ell_z(t) = -3$
+
+        $\ell(t) = (6, \frac{6}{7}, -3) + t (\frac{3}{7}, \frac{9}{7}, 0)$
+
+        \item We project (perspective) a scene with C.O.P = (0,0,0) and a viewing plane z=-2. We know that two intersecting lines in our scenes, $l_1$,$l_2$, have two different vanishing points, (1,1,-2),(2,4,-2) accordingly. What is the angle $\theta$ between $l_1$ and $l_2$?
+        
+        Since the vectors pass through the COP which is the origin we can consider the vanishing points as vectors and do the following:
+
+        $v_1 = \begin{bmatrix}
+            1 \\ 1 \\ -2
+        \end{bmatrix},
+        v_2 = \begin{bmatrix}
+            2 \\ 4 \\ -2
+        \end{bmatrix}$
+
+        $\cos \theta = \frac{v_1 \cdot v_2}{\|v_1\| \|v_2\|} = \frac{2 + 4 + 4}{\sqrt{1 + 1 + 4} \sqrt{4 + 16 + 4} } = \frac{10}{\sqrt{6} \sqrt{24} } = \frac{10}{\sqrt{144} }= \frac{10}{12 }= \frac{5}{6 }$
+
+        $\theta = 33.557^o$
+
+        \item Find the matrix representing the perspective projection where the COP=(1,-3,2) and projection plane with implicit representation -2x-y+3z=0.
+        
+        $f = \frac{(-2,-1,3) \cdot (1,-3,2)}{\|(-2,-1,3)\|} = \frac{7}{\sqrt{14}} = \sqrt{\frac{7}{2}} $
+
+        $T = \begin{bmatrix}
+            1 && 0 && 0 && -1 \\ 
+            0 && 1 && 0 && 3 \\ 
+            0 && 0 && 1 && -2 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}, 
+        T^{-1} = \begin{bmatrix}
+            1 && 0 && 0 && 1 \\ 
+            0 && 1 && 0 && -3 \\ 
+            0 && 0 && 1 && 2 \\ 
+            0 && 0 && 0 && 1 
+        \end{bmatrix}$ 
+
+        We will create an orthonormal plane from which we will set our Z axis
+        
+        $v_1' = (-2, -1, 3)  v_2 = \frac{v_1'}{\|v_1'\|} = (\frac{-2}{\sqrt{14}}, \frac{1}{\sqrt{14}}, \frac{3}{\sqrt{14}})$
+
+
+        $v_2' = (-2, -1, 3) \times (1, 0 , 0) = (0, 3, 1), v_2 = \frac{v_2'}{\|v_2'\|} = (0, \frac{1}{\sqrt{10}}, \frac{3}{\sqrt{10}})$
+
+        $v_3' = v_1' \times v_2' = (-10, 2, 6), v_2 = \frac{v_3'}{\|v_3'\|} = (\frac{-5}{\sqrt{35}}, \frac{1}{\sqrt{35}}, \frac{-3}{\sqrt{35}})$
+
+        $R = \begin{bmatrix}
+            0 && \frac{1}{\sqrt{10}} && \frac{3}{\sqrt{10}} && 0 \\ 
+            \frac{-5}{\sqrt{35}} && \frac{1}{\sqrt{35}} && \frac{-3}{\sqrt{35}} && 0 \\ 
+            \frac{-2}{\sqrt{14}} && \frac{1}{\sqrt{14}} && \frac{3}{\sqrt{14}} && 0 \\ 
+            0 && 0 && 0 && 0
+        \end{bmatrix}$
+
+
+        Finally, we have the perspective projection matrix
+
+        $  F = \begin{bmatrix}
+            1 && 0 && 0 && 0 \\ 
+            0 && 1 && 0 && 0 \\ 
+            0 && 0 && 1 && 0 \\ 
+            0 && 0 && \sqrt{\frac{-2}{7}} && 0
+        \end{bmatrix}$
+
+        We therefore obtain the perspective projection matrix M by applying the following:
+
+        $M = T^{-1} \circ R^T \circ F \circ R \circ T $
+
+    \end{enumerate}
+\end{document}

@@ -1,0 +1,1 @@
+Added textures and encapsulated the whole scene in a big sphere with a universe texture map
