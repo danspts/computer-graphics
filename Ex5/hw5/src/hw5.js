@@ -106,10 +106,11 @@ const wingRotate = new THREE.Matrix4();
 // Planet
 const planet = new THREE.Object3D()
 orbit.add(planet)
-const sphereGeometry = new THREE.SphereGeometry(5, 32, 16);
+let radius = 5 * (coneGeometry.parameters.height + cylinderGeometry.parameters.height)
+const sphereGeometry = new THREE.SphereGeometry(radius, 32, 16);
 const sphere = new THREE.Mesh(sphereGeometry, moonMat);
 const shipTranslate = new THREE.Matrix4();
-shipTranslate.makeTranslation(10, 0, 0);
+shipTranslate.makeTranslation(radius + 10, 0, 0);
 ship.applyMatrix4(shipTranslate);
 planet.add(sphere);
 
@@ -121,7 +122,7 @@ hemiLight.position.set(0, 0, -10);
 
 // orbit translated since moon cannot be at the center
 const orbitTranslate = new THREE.Matrix4();
-orbitTranslate.makeTranslation(-4, 5, 2);
+orbitTranslate.makeTranslation(-40, 40, 2);
 orbit.applyMatrix4(orbitTranslate)
 
 // orbit tranformation matrices
@@ -155,7 +156,7 @@ scene.add(hemiLight);
 
 // This defines the initial distance of the camera
 const cameraTranslate = new THREE.Matrix4();
-cameraTranslate.makeTranslation(0, 0, 5);
+cameraTranslate.makeTranslation(0, 0, 2 * radius );
 camera.applyMatrix4(cameraTranslate)
 renderer.render(scene, camera);
 
