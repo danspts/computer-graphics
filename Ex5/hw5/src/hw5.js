@@ -103,6 +103,11 @@ const wingRotate = new THREE.Matrix4();
 	ship.add(wing_ob);
 })
 
+// Propelers 
+const geometryPropelers = new THREE.CylinderGeometry( 1, 2, 3, 32 );
+const properler = new THREE.Mesh(geometryPropelers, wingMat);
+
+
 // Planet
 const planet = new THREE.Object3D()
 orbit.add(planet)
@@ -160,40 +165,26 @@ cameraTranslate.makeTranslation(0, 0, 2 * radius );
 camera.applyMatrix4(cameraTranslate)
 renderer.render(scene, camera);
 
-
 // Event controls 
 const controls = new OrbitControls(camera, renderer.domElement);
 
-const toggleKeys = (e) => {
-	switch (e.key) {
-		case 'w':
-			materials.map(function (mat) { mat.wireframe = !mat.wireframe })
-			break;
-		case "o":
-			isOrbitEnabled = !isOrbitEnabled;
-			break;
-	}
-	if (!isOrbitEnabled) return;
-	switch (e.key) {
-		case '1':
-			isAnim1Enabled = !isAnim1Enabled;
-			break;
-		case '2':
-			isAnim2Enabled = !isAnim2Enabled;
-			break;
-		case '3':
-			isAnim3Enabled = !isAnim3Enabled;
-			break;
-	}
-}
+const toggleOrbit = (e) => {if (e.key == "o") isOrbitEnabled = !isOrbitEnabled;}
+const toggleWireframe = (e) => { if (e.key == "w") materials.map(function (mat) { mat.wireframe = !mat.wireframe })}
+const toggleAnim1 = (e) =>  { if (e.key == "1") isAnim1Enabled = !isAnim1Enabled;}
+const toggleAnim2 = (e) =>  { if (e.key == "2") isAnim2Enabled = !isAnim2Enabled;}
+const toggleAnim3 = (e) =>  { if (e.key == "3") isAnim3Enabled = !isAnim3Enabled;}
 
-document.addEventListener('keydown', toggleKeys)
+document.addEventListener('keydown',toggleOrbit)
+document.addEventListener('keydown',toggleWireframe)
+document.addEventListener('keydown',toggleAnim1)
+document.addEventListener('keydown',toggleAnim2)
+document.addEventListener('keydown',toggleAnim3)
 
 function animate() {
-	renderer.render(scene, camera);
-	requestAnimationFrame(animate);
 	controls.update();
-	if (!isOrbitEnabled) return;
+	requestAnimationFrame( animate );
+	controls.enabled = isOrbitEnabled;
+	renderer.render(scene, camera);
 	if (isAnim1Enabled) ship.applyMatrix4(anim1);
 	if (isAnim2Enabled) ship.applyMatrix4(anim2);
 	if (isAnim3Enabled){
