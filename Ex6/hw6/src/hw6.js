@@ -231,9 +231,22 @@ curves.add(routeC);
 
 const spacedPointsC = curveC.getSpacedPoints(NUM_POINTS);
 
+var curveList = [curveA, curveB, curveC]
+
 // TODO: Camera Settings
 // Set the camera following the spaceship here
-
+const cameraTranslate = new THREE.Matrix4();
+cameraTranslate.makeTranslation(ship.position.x, ship.position.y - 5, ship.position.z - 20);
+const cameraRotateY = new THREE.Matrix4();
+cameraRotateY.makeRotationY(degrees_to_radians(-20));
+const cameraRotateX = new THREE.Matrix4();
+cameraRotateX.makeRotationX(degrees_to_radians(180));
+const cameraRotateZ = new THREE.Matrix4();
+cameraRotateZ.makeRotationZ(degrees_to_radians(60));
+camera.applyMatrix4(cameraRotateY)
+camera.applyMatrix4(cameraRotateX)
+camera.applyMatrix4(cameraRotateZ)
+camera.applyMatrix4(cameraTranslate)
 
 // TODO: Add collectible stars
 
@@ -249,15 +262,10 @@ scene.add(curves);
 
 // placing the camera at a distance
 // TODO: this wasn't in the file, this is just for debugging! remove later
-const cameraTranslate = new THREE.Matrix4();
+
 // cameraTranslate.makeTranslation(0, 0, 2 * radius );
 // cameraTranslate.makeTranslation(0, 0, radius );
-cameraTranslate.makeTranslation(100,5,100 + 2 * radius);
-const cameraRotate = new THREE.Matrix4();
-cameraRotate.makeRotationX(degrees_to_radians(-120));
-camera.applyMatrix4(cameraTranslate)
-camera.applyMatrix4(cameraRotate)
-renderer.render(scene, camera);
+// cameraTranslate.makeTranslation(100,5,100 + 2 * radius);
 
 
 // TODO: Add keyboard event
@@ -279,11 +287,12 @@ function animate() {
 
 	// TODO: Animation for the spaceship position
 	if( t < NUM_POINTS ){
-		let newPos = spacedPointsA[t];
+		let newPos = spacedPointsC[t];
 		newPos.addScaledVector(ship.position,-1);
 		let posTranslate = new THREE.Matrix4();
 		posTranslate.makeTranslation(newPos.x, newPos.y, newPos.z);
 		ship.applyMatrix4(posTranslate);
+		camera.applyMatrix4(posTranslate);
 		t += 1;
 	}
 
