@@ -15,9 +15,11 @@ function degrees_to_radians(degrees)
 }
 
 
-// Constants
+// Constants and Predefined Values
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
+let t = 0;
+const NUM_POINTS = 3000;
 
 
 // Here we load the cubemap and skymap, you may change it
@@ -145,20 +147,7 @@ earth.add(earthSphere);
 // ball.applyMatrix4(ballmove);
 
 
-
-
-// TODO: Bezier Curves
-
-
-// TODO: Camera Settings
-// Set the camera following the spaceship here
-
-
-// TODO: Add collectible stars
-
-
 // TODO: Add Lighting
-
 
 // Directional Light
 const sunLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
@@ -186,11 +175,75 @@ hemiLight.groundColor.setHSL(0.095, 1, 1);
 hemiLight.position.set(0, 0, -10);
 
 
+// Moving the Ship Outside the Moon
+const shipRotate = new THREE.Matrix4();
+shipRotate.makeRotationZ(degrees_to_radians(-90));
+ship.applyMatrix4(shipRotate);
+const shipTranslate = new THREE.Matrix4();
+shipTranslate.makeTranslation(radius / 3 + 10, 0, 0);
+ship.applyMatrix4(shipTranslate);
+
+
+// TODO: Bezier Curves
+const curves = new THREE.Object3D();
+// TODO: remove later, this is just for visualizing
+const curveMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+
+// Route A
+const curveA = new THREE.QuadraticBezierCurve3(
+	ship.position,
+	new THREE.Vector3( 0, 5, 40 ),
+	new THREE.Vector3( 100, 10 + radius + 5, -10 -radius + 100 )
+);
+
+const pointsA = curveA.getPoints( 3000 );
+const curveAGeometry = new THREE.BufferGeometry().setFromPoints( pointsA );
+const routeA = new THREE.Line( curveAGeometry, curveMat );
+curves.add(routeA);
+
+const spacedPointsA = curveA.getSpacedPoints(NUM_POINTS);
+
+// Route B
+const curveB = new THREE.QuadraticBezierCurve3(
+	ship.position,
+	new THREE.Vector3( 50, 0, 50 ),
+	new THREE.Vector3( 100, 10 + radius + 5, -10 -radius + 100 )
+);
+
+const pointsB = curveB.getPoints( 3000 );
+const curveBGeometry = new THREE.BufferGeometry().setFromPoints( pointsB );
+const routeB = new THREE.Line( curveBGeometry, curveMat );
+curves.add(routeB);
+
+const spacedPointsB = curveB.getSpacedPoints(NUM_POINTS);
+
+// Route C
+const curveC = new THREE.QuadraticBezierCurve3(
+	ship.position,
+	new THREE.Vector3( 70, -5, 70 ),
+	new THREE.Vector3( 100, 10 + radius + 5, -10 -radius + 100 )
+);
+
+const pointsC = curveC.getPoints( 3000 );
+const curveCGeometry = new THREE.BufferGeometry().setFromPoints( pointsC );
+const routeC = new THREE.Line( curveCGeometry, curveMat );
+curves.add(routeC);
+
+const spacedPointsC = curveC.getSpacedPoints(NUM_POINTS);
+
+// TODO: Camera Settings
+// Set the camera following the spaceship here
+
+
+// TODO: Add collectible stars
+
+
 // Scene
 scene.add(ship);
 scene.add(hemiLight);
 scene.add(planets);
 scene.add(sunLight);
+scene.add(curves);
 // scene.add(ball);
 
 
@@ -201,7 +254,7 @@ const cameraTranslate = new THREE.Matrix4();
 // cameraTranslate.makeTranslation(0, 0, radius );
 cameraTranslate.makeTranslation(100,5,100 + 2 * radius);
 const cameraRotate = new THREE.Matrix4();
-cameraRotate.makeRotationY(degrees_to_radians(-60));
+cameraRotate.makeRotationX(degrees_to_radians(-120));
 camera.applyMatrix4(cameraTranslate)
 camera.applyMatrix4(cameraRotate)
 renderer.render(scene, camera);
@@ -225,7 +278,14 @@ function animate() {
 	requestAnimationFrame( animate );
 
 	// TODO: Animation for the spaceship position
-
+	if( t < NUM_POINTS ){
+		let newPos = spacedPointsA[t];
+		newPos.addScaledVector(ship.position,-1);
+		let posTranslate = new THREE.Matrix4();
+		posTranslate.makeTranslation(newPos.x, newPos.y, newPos.z);
+		ship.applyMatrix4(posTranslate);
+		t += 1;
+	}
 
 	// TODO: Test for star-spaceship collision
 
