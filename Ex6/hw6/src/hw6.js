@@ -33,9 +33,6 @@ let clock = new THREE.Clock();
 let delta = 0;
 let fps = 1 / 60;
 
-
-// Here we load the cubemap and skymap, you may change it
-
 const loader = new THREE.CubeTextureLoader();
 const texture = loader.load([
 	'src/skybox/right.png',
@@ -48,8 +45,6 @@ const texture = loader.load([
 scene.background = texture;
 
 
-// TODO: Texture Loading
-// We usually do the texture loading before we start everything else, as it might take processing time
 const textureLoader = new THREE.TextureLoader();
 
 const earthTex = textureLoader.load('src/textures/earth.jpg');
@@ -188,9 +183,8 @@ shipTranslate.makeTranslation(radius / 3 + 10, 0, 0);
 shipTrajectory.applyMatrix4(shipTranslate);
 
 let curves = [];
-// TODO: Bezier Curves
+// Bezier Curves
 const routes = new THREE.Object3D();
-// TODO: remove later, this is just for visualizing
 const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
 // Route A
@@ -235,8 +229,7 @@ curves.push(curveC);
 var curveList = curves.map(curve => curve.getSpacedPoints(NUM_POINTS));
 const lenCurveList = curveList.length;
 
-// TODO: Camera Settings
-// Set the camera following the spaceship here
+// Camera Settings
 const cameraTranslate = new THREE.Matrix4();
 cameraTranslate.makeTranslation(shipTrajectory.position.x, shipTrajectory.position.y - 5, shipTrajectory.position.z - 20);
 const cameraRotateY = new THREE.Matrix4();
@@ -250,7 +243,7 @@ camera.applyMatrix4(cameraRotateX)
 camera.applyMatrix4(cameraRotateZ)
 camera.applyMatrix4(cameraTranslate)
 
-// TODO: Add collectible stars
+// Collectible stars
 const stars = new THREE.Object3D();
 
 const starGeometry = new THREE.DodecahedronGeometry();
@@ -273,16 +266,12 @@ starList.forEach(star => stars.add(star.starObj));
 
 // Scene
 scene.add(shipTrajectory);
-// scene.add(ship);
 scene.add(hemiLight);
 scene.add(planets);
 scene.add(sunLight);
 scene.add(routes);
 scene.add(stars);
-// scene.add(ball);
 
-// TODO: Add keyboard event
-// We wrote some of the function for you
 const handle_keydown = (e) => {
 	switch (e.code) {
 		case 'ArrowLeft':
@@ -304,7 +293,6 @@ const handle_speed = (e) => {
 			break;
 	}
 }
-
 
 document.addEventListener('keydown', handle_speed);
 document.addEventListener('keydown', handle_keydown);
@@ -330,9 +318,9 @@ time.style.right = 50 + 'px';
 document.body.appendChild(time);
 let clockTime = 0;
 
-let ordStarList = starList.sort(function(x, y){return x.t < y.t})
+let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
 
-let planetRotFuncs = planetList.map(function(planet){
+let planetRotFuncs = planetList.map(function (planet) {
 	let planetRotate = new THREE.Matrix4().identity();
 	planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
 	planetRotate.multiply(new THREE.Matrix4().makeRotationX(0.01));
@@ -358,11 +346,11 @@ function animate() {
 	let shift = 0;
 	let get_star = i => ordStarList[i - shift]
 	for (let i = 0; i < ordStarList.length; i++) {
-		if (get_star(i).t * NUM_POINTS - t < 0){
+		if (get_star(i).t * NUM_POINTS - t < 0) {
 			ordStarList.pop(i);
 			shift += 1;
 		}
-		else if (get_star(i).tValue * NUM_POINTS - t < COLLISION_EPSILON){
+		else if (get_star(i).tValue * NUM_POINTS - t < COLLISION_EPSILON) {
 			if (get_star(i).space == curveList[curveNum] && get_star(i).starObj.visible) {
 				collected += 1;
 				get_star(i).starObj.visible = false;
@@ -374,7 +362,7 @@ function animate() {
 
 	if (delta > fps) {
 		renderer.render(scene, camera);
-		if(t < NUM_POINTS - 1){
+		if (t < NUM_POINTS - 1) {
 			clockTime += delta;
 			time.innerHTML = "Time : " + clockTime.toPrecision(5);
 		}
