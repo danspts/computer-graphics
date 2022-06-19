@@ -331,20 +331,18 @@ document.body.appendChild(time);
 let clockTime = 0;
 
 let ordStarList = starList.sort(function(x, y){return x.t < y.t})
-const planetRotate = new THREE.Matrix4();
-planetRotate.makeRotationY(0.01);
 
+let planetRotFuncs = planetList.map(function(planet){
+	let planetRotate = new THREE.Matrix4().identity();
+	planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
+	planetRotate.multiply(new THREE.Matrix4().makeRotationX(0.01));
+	planetRotate.multiply(new THREE.Matrix4().makeTranslation(-planet.position.x, -planet.position.y, -planet.position.z));
+	return _ => planet.applyMatrix4(planetRotate);
+})
 
 function animate() {
 	requestAnimationFrame(animate);
-
-	planetList.forEach(function(planet){
-		let planetRotate = new THREE.Matrix4().identity();
-		planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
-		planetRotate.multiply(new THREE.Matrix4().makeRotationY(0.01));
-		planetRotate.multiply(new THREE.Matrix4().makeTranslation(-planet.position.x, -planet.position.y, -planet.position.z));
-		planet.applyMatrix4(planetRotate);
-	})
+	planetRotFuncs.forEach(rotation => rotation())
 
 	if (t < NUM_POINTS) {
 		let pointList = curveList[curveNum];
