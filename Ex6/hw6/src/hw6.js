@@ -389,6 +389,23 @@ time.style.right = 50 + 'px';
 document.body.appendChild(time);
 let clockTime = 0;
 
+var promptMsg = document.createElement('div');
+promptMsg.style.position = 'absolute';
+promptMsg.style.zIndex = 1;
+promptMsg.style.width = 100;
+promptMsg.style.height = 100;
+promptMsg.style.color = "black";
+promptMsg.style.top = 50 + '%';
+promptMsg.style.right = 30 + '%';
+promptMsg.style.left = 30 + '%';
+promptMsg.style.fontSize = 150 + '%';
+promptMsg.style.textAlign = 'center';
+promptMsg.style.backgroundColor = 'aquamarine';
+promptMsg.style.fontweight = 'bold';
+promptMsg.style.fontFamily = 'Lucida Handwriting';
+document.body.appendChild(promptMsg);
+
+
 let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
 
 let planetRotFuncs = starList.map(star => star.starObj).concat(planetList).map(function (planet) {
@@ -448,6 +465,10 @@ function animate() {
 			time.innerHTML = "Time : " + clockTime.toPrecision(5);
 		}
 		delta = delta % fps;
+	}
+
+	if(t >= NUM_POINTS){
+		promptMsg.innerHTML = " Your Score is " + collected + " ";
 	}
 
 
