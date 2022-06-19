@@ -244,10 +244,10 @@ const shipTranslate = new THREE.Matrix4();
 shipTranslate.makeTranslation(radius / 3 + 10, 0, 0);
 shipTrajectory.applyMatrix4(shipTranslate);
 
-let curves = [];
 // Bezier Curves
+let curves = [];
 const routes = new THREE.Object3D();
-const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000, visible:false});
 
 // Route A
 const curveA = new THREE.QuadraticBezierCurve3(
