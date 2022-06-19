@@ -19,6 +19,7 @@ function degrees_to_radians(degrees)
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
 let t = 0;
+let curveNum = 0;
 const NUM_POINTS = 3000;
 
 
@@ -56,8 +57,9 @@ wingMat.side = THREE.DoubleSide;
 const moonMat = new THREE.MeshPhongMaterial({ map: moonTex });
 const earthMat = new THREE.MeshPhongMaterial({ map: earthTex });
 // earthMat.wireframe = true;
+const starMat = new THREE.MeshPhongMaterial({ map: starTex });
 
-var materials = [earthMat, moonMat, hullMat, windowMat, coneMat, wingMat]
+var materials = [starMat, earthMat, moonMat, hullMat, windowMat, coneMat, wingMat]
 
 
 // TODO: Spaceship
@@ -231,7 +233,7 @@ curves.add(routeC);
 
 const spacedPointsC = curveC.getSpacedPoints(NUM_POINTS);
 
-var curveList = [curveA, curveB, curveC]
+var curveList = [spacedPointsA, spacedPointsB, spacedPointsC];
 
 // TODO: Camera Settings
 // Set the camera following the spaceship here
@@ -249,6 +251,7 @@ camera.applyMatrix4(cameraRotateZ)
 camera.applyMatrix4(cameraTranslate)
 
 // TODO: Add collectible stars
+
 
 
 // Scene
@@ -273,8 +276,14 @@ scene.add(curves);
 const handle_keydown = (e) => {
 	if(e.code == 'ArrowLeft'){
 		// TODO
+		curveNum = (curveNum + 1) % 3;
 	} else if (e.code == 'ArrowRight'){
 		// TODO
+		curveNum = curveNum - 1;
+		if (curveNum < 0){
+			curveNum = curveList.length - 1;
+		}
+		curveNum = curveNum % 3;
 	}
 }
 document.addEventListener('keydown', handle_keydown);
@@ -287,7 +296,8 @@ function animate() {
 
 	// TODO: Animation for the spaceship position
 	if( t < NUM_POINTS ){
-		let newPos = spacedPointsC[t];
+		let pointList = curveList[curveNum];
+		let newPos = pointList[t];
 		newPos.addScaledVector(ship.position,-1);
 		let posTranslate = new THREE.Matrix4();
 		posTranslate.makeTranslation(newPos.x, newPos.y, newPos.z);
