@@ -61,7 +61,7 @@ const earthCloudsTexture = textureLoader.load(earthCloudsURL);
 
 const moonTexture = textureLoader.load(moonTextureURL);
 const moonDisplacementMap = textureLoader.load(moonDisplacementURL);
-const starTex = textureLoader.load('src/textures/star.jpg');
+const starTexture = textureLoader.load('src/textures/star.jpg');
 
 
 // Materials
@@ -102,7 +102,15 @@ const earthCloudsMat = new THREE.MeshPhongMaterial({
 	transparent: true
 })
 
-const starMat = new THREE.MeshPhongMaterial({ map: starTex });
+const starMat = new THREE.MeshPhongMaterial({ 
+	map: starTexture,
+	displacementMap: moonDisplacementMap,
+	displacementScale: 2,
+	bumpMap: moonDisplacementMap,
+	bumpScale: 2,
+	reflectivity: 0,
+	shininess: 0
+});
 
 // TODO: Spaceship
 // You should copy-paste the spaceship from the previous exercise here
@@ -288,7 +296,7 @@ camera.applyMatrix4(cameraTranslate)
 // Collectible stars
 const stars = new THREE.Object3D();
 
-const starGeometry = new THREE.DodecahedronGeometry();
+const starGeometry = new THREE.DodecahedronGeometry(1, 1);
 const starObject = new THREE.Mesh(starGeometry, starMat);
 class Star {
 	constructor(curveList, isGood = true) {
@@ -296,12 +304,15 @@ class Star {
 		let randInt = ~~(Math.random() * NUM_POINTS)
 		this.space = curveList[~~(Math.random() * curveList.length)]
 		let v = this.space[randInt];
-		let starTranslate = new THREE.Matrix4();
-		starTranslate.makeTranslation(v.x, v.y, v.z);
+		let starRotate = new THREE.Matrix4().identity();
+		starRotate.multiply(new THREE.Matrix4().makeTranslation(v.x, v.y, v.z));
+		starRotate.multiply(new THREE.Matrix4().makeRotationX(Math.random() * 2 - 1));
+		starRotate.multiply(new THREE.Matrix4().makeRotationY(Math.random() * 2 - 1));
+		starRotate.multiply(new THREE.Matrix4().makeRotationZ(Math.random() * 2 - 1));
 		this.tValue = randInt / NUM_POINTS;
 		if (isGood) this.starObj = starObject.clone();
 		else this.starObj = starObject.clone();
-		this.starObj.applyMatrix4(starTranslate);
+		this.starObj.applyMatrix4(starRotate);
 	}
 }
 
