@@ -18,9 +18,10 @@ function degrees_to_radians(degrees)
 // Constants and Predefined Values
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
+const NUM_POINTS = 3000;
 let t = 0;
 let curveNum = 0;
-const NUM_POINTS = 3000;
+let collected = 0;
 
 
 // Here we load the cubemap and skymap, you may change it
@@ -251,7 +252,27 @@ camera.applyMatrix4(cameraRotateZ)
 camera.applyMatrix4(cameraTranslate)
 
 // TODO: Add collectible stars
+const stars = new THREE.Object3D();
+class Star {
+	constructor(curveIndex, tValue, starObj) {
+		this.curveIndex = curveIndex;
+		this.tValue = tValue;
+		this.starObj = starObj
+	}
+}
 
+const starGeometry = new THREE.DodecahedronGeometry();
+var starObject = new THREE.Mesh(starGeometry, starMat);
+
+let v = curveA.getPoint(0.5);
+const starTranslate = new THREE.Matrix4();
+starTranslate.makeTranslation(v.x, v.y, v.z);
+starObject.applyMatrix4(starTranslate);
+stars.add(starObject);
+
+const star1 = new Star(0, 0.5, starObject);
+
+var starList = [star1];
 
 
 // Scene
@@ -260,6 +281,7 @@ scene.add(hemiLight);
 scene.add(planets);
 scene.add(sunLight);
 scene.add(curves);
+scene.add(stars);
 // scene.add(ball);
 
 
@@ -307,6 +329,13 @@ function animate() {
 	}
 
 	// TODO: Test for star-spaceship collision
+	if(starList.length > 0 && starList[0].tValue == (t - 1) / NUM_POINTS){
+		if(starList[0].curveIndex == curveNum){
+			collected += 1;
+			starList[0].starObj.visible = false;
+			starList.shift();
+		}
+	}
 
 	
 	renderer.render( scene, camera );
