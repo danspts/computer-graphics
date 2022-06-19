@@ -408,7 +408,7 @@ document.body.appendChild(promptMsg);
 
 let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
 
-let planetRotFuncs = starList.map(star => star.starObj).concat(planetList).map(function (planet) {
+let planetRotFuncs = planetList.map(function (planet) {
 	let planetRotate = new THREE.Matrix4().identity();
 	planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
 	planetRotate.multiply(new THREE.Matrix4().makeRotationY(0.001));
@@ -438,23 +438,16 @@ function animate() {
 		camera.applyMatrix4(posTranslate);
 		t += Math.max(1, Math.floor(speed));
 	}
-	let shift = 0;
-	for (let i = 0; i < ordStarList.length; i++) {
-		let star = ordStarList[i - shift];
-		if (star.tValue * NUM_POINTS + COLLISION_EPSILON < t) {
-			ordStarList.pop(i);
-			console.log(star.tValue * NUM_POINTS, t)
-			shift += 1;
-		}
-		else if (star.tValue * NUM_POINTS - t < COLLISION_EPSILON) {
-			if (star.space == curveList[curveNum] && star.starObj.visible) {
-				console.log(star.tValue * NUM_POINTS, t)
+	ordStarList = ordStarList.filter(x => x.tValue  * NUM_POINTS > t && x.starObj.visible)
+	ordStarList.forEach(function(star){
+		if (star.tValue * NUM_POINTS - t < COLLISION_EPSILON) {
+			if (star.space == curveList[curveNum]) {
 				if (star.isGood) collected += 1;
 				else collected -= 3;
 				star.starObj.visible = false;
 			}
 		}
-	}
+	})
 	score.innerHTML = "Score : " + collected;
 	delta += clock.getDelta();
 
