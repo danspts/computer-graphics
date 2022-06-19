@@ -293,17 +293,18 @@ const lenCurveList = curveList.length;
 
 // Camera Settings
 const cameraTranslate = new THREE.Matrix4();
-cameraTranslate.makeTranslation(shipTrajectory.position.x, shipTrajectory.position.y - 5, shipTrajectory.position.z - 20);
+cameraTranslate.makeTranslation(shipTrajectory.position.x, shipTrajectory.position.y - 10, shipTrajectory.position.z - 70);
 const cameraRotateY = new THREE.Matrix4();
 cameraRotateY.makeRotationY(degrees_to_radians(-20));
 const cameraRotateX = new THREE.Matrix4();
 cameraRotateX.makeRotationX(degrees_to_radians(180));
 const cameraRotateZ = new THREE.Matrix4();
-cameraRotateZ.makeRotationZ(degrees_to_radians(60));
+cameraRotateZ.makeRotationZ(degrees_to_radians(110));
 camera.applyMatrix4(cameraRotateY)
 camera.applyMatrix4(cameraRotateX)
 camera.applyMatrix4(cameraRotateZ)
 camera.applyMatrix4(cameraTranslate)
+shipTrajectory.add(camera)
 
 // Collectible stars
 const stars = new THREE.Object3D();
@@ -439,7 +440,6 @@ function animate() {
 		let posTranslate = new THREE.Matrix4();
 		posTranslate.makeTranslation(newPos.x, newPos.y, newPos.z);
 		shipTrajectory.applyMatrix4(posTranslate);
-		camera.applyMatrix4(posTranslate);
 		t += Math.max(1, Math.floor(speed));
 	}
 	ordStarList = ordStarList.filter(x => x.tValue * NUM_POINTS > t && x.starObj.visible)
