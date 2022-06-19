@@ -19,9 +19,10 @@ function mod(n, m) {
 
 // Constants and Predefined Values
 const NB_WINGS = 6;
+const NB_STARS = 5;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
-const COLLISION_EPSILON = 0.025;
+const COLLISION_EPSILON = 8;
 const SPEED_COEFFICIENT = 1.2;
 const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
 let speed = 1;
@@ -263,12 +264,10 @@ const stars = new THREE.Object3D();
 const starGeometry = new THREE.DodecahedronGeometry();
 const starObject = new THREE.Mesh(starGeometry, starMat);
 class Star {
-
-
 	constructor(curveList) {
 		let randInt = ~~(Math.random() * NUM_POINTS)
-		let space = curveList[~~(Math.random() * curveList.length)]
-		let v = space[randInt];
+		this.space = curveList[~~(Math.random() * curveList.length)]
+		let v = this.space[randInt];
 		let starTranslate = new THREE.Matrix4();
 		starTranslate.makeTranslation(v.x, v.y, v.z);
 		this.tValue = randInt / NUM_POINTS;
@@ -277,12 +276,9 @@ class Star {
 	}
 }
 
-let star_obj = new Star(curveList);
-
-stars.add(star_obj.starObj);
-
-var starList = [star_obj];
-
+var starList = [...Array(NB_STARS)].map(_ => new Star(curveList));
+console.log(starList)
+starList.forEach(star => stars.add(star.starObj));
 
 // Scene
 scene.add(shipTrajectory);
@@ -343,11 +339,11 @@ time.style.right = 50 + 'px';
 document.body.appendChild(time);
 let clockTime = 0;
 
+let ordStarList = starList.sort(function(x, y){return x.t < y.t})
+
 function animate() {
 	requestAnimationFrame(animate);
 
-
-	// TODO: Animation for the spaceship position
 	if (t < NUM_POINTS) {
 		let pointList = curveList[curveNum];
 		let newPos = pointList[t];
@@ -359,13 +355,16 @@ function animate() {
 		camera.applyMatrix4(posTranslate);
 		t += Math.max(1, Math.floor(speed));
 	}
-
-	// TODO: Test for star-spaceship collision
-	if (starList.length > 0 && Math.abs(starList[0].tValue - (t - 1) / NUM_POINTS) < COLLISION_EPSILON) {
-		if (starList[0].curveIndex == curveNum) {
-			collected += 1;
-			starList[0].starObj.visible = false;
-			starList.shift();
+	for (let i = 0; i < ordStarList.length; i++) {
+		if (ordStarList[i].t * NUM_POINTS - t < 0){
+			ordStarList.pop(i);
+		}
+		if (ordStarList[i].tValue * NUM_POINTS - t < COLLISION_EPSILON){
+			if (ordStarList[i].space == curveList[curveNum] && ordStarList[i].starObj.visible) {
+				collected += 1;
+				ordStarList[i].starObj.visible = false;
+				ordStarList[i].shift();
+			}
 		}
 	}
 	score.innerHTML = "Score : " + collected;
@@ -373,8 +372,10 @@ function animate() {
 
 	if (delta > fps) {
 		renderer.render(scene, camera);
-		clockTime += delta
-		time.innerHTML = "Time : " + clockTime.toPrecision(5);
+		if(t < NUM_POINTS - 1){
+			clockTime += delta;
+			time.innerHTML = "Time : " + clockTime.toPrecision(5);
+		}
 		delta = delta % fps;
 	}
 
