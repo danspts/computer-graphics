@@ -214,14 +214,14 @@ earth.add(earthSphere);
 let planetList = [earthSphere, moonSphere]
 
 // Directional Light
-const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
 const translateSun = new THREE.Matrix4();
 translateSun.makeTranslation(0, -10, 10);
 sunLight.applyMatrix4(translateSun);
 sunLight.target = planets;
 
 // Spotlight
-const spotLight = new THREE.SpotLight(0xffffff);
+const spotLight = new THREE.SpotLight(0xffffff, 0.3);
 spotLight.position.set(0, 6, 0);
 ship.add(spotLight);
 
