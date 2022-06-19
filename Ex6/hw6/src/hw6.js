@@ -23,7 +23,7 @@ const NB_STARS = 5;
 const NB_BAD_STARS = 3;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
-const COLLISION_EPSILON = 4;
+const COLLISION_EPSILON = NUM_POINTS / 150;
 const SPEED_COEFFICIENT = 1.2;
 const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
 let speed = 1;
@@ -91,9 +91,9 @@ const earthMat = new THREE.MeshPhongMaterial(
 		color: 0xffffff,
 		map: earthTexture,
 		displacementMap: earthDisplacementMap,
-		displacementScale: 0.06,
+		displacementScale: 0.5,
 		bumpMap: earthDisplacementMap,
-		bumpScale: 0.07,
+		bumpScale: 0.5,
 		specularMap: earthSpecular,
 		specular: new THREE.Color('grey')
 	}
@@ -343,6 +343,7 @@ scene.add(routes);
 scene.add(stars);
 
 const handle_keydown = (e) => {
+	console.log(curveNum)
 	switch (e.code) {
 		case 'ArrowLeft':
 			curveNum = mod(curveNum + 1, lenCurveList);
@@ -390,7 +391,7 @@ let clockTime = 0;
 
 let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
 
-let planetRotFuncs = planetList.map(function (planet) {
+let planetRotFuncs = starList.map(star => star.starObj).concat(planetList).map(function (planet) {
 	let planetRotate = new THREE.Matrix4().identity();
 	planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
 	planetRotate.multiply(new THREE.Matrix4().makeRotationY(0.001));
@@ -423,12 +424,14 @@ function animate() {
 	let shift = 0;
 	for (let i = 0; i < ordStarList.length; i++) {
 		let star = ordStarList[i - shift];
-		if (star.t * NUM_POINTS < t + 1) {
+		if (star.tValue * NUM_POINTS + COLLISION_EPSILON < t) {
 			ordStarList.pop(i);
+			console.log(star.tValue * NUM_POINTS, t)
 			shift += 1;
 		}
 		else if (star.tValue * NUM_POINTS - t < COLLISION_EPSILON) {
 			if (star.space == curveList[curveNum] && star.starObj.visible) {
+				console.log(star.tValue * NUM_POINTS, t)
 				if (star.isGood) collected += 1;
 				else collected -= 3;
 				star.starObj.visible = false;
