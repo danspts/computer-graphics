@@ -264,13 +264,13 @@ class Star {
 const starGeometry = new THREE.DodecahedronGeometry();
 var starObject = new THREE.Mesh(starGeometry, starMat);
 
-let v = curveA.getPoint(0.5);
+let v = spacedPointsA[NUM_POINTS/2];
 const starTranslate = new THREE.Matrix4();
 starTranslate.makeTranslation(v.x, v.y, v.z);
 starObject.applyMatrix4(starTranslate);
 stars.add(starObject);
 
-const star1 = new Star(0, 0.5, starObject);
+const star1 = new Star(0, (0.5 * NUM_POINTS)/NUM_POINTS, starObject);
 
 var starList = [star1];
 
@@ -283,14 +283,6 @@ scene.add(sunLight);
 scene.add(curves);
 scene.add(stars);
 // scene.add(ball);
-
-
-// placing the camera at a distance
-// TODO: this wasn't in the file, this is just for debugging! remove later
-
-// cameraTranslate.makeTranslation(0, 0, 2 * radius );
-// cameraTranslate.makeTranslation(0, 0, radius );
-// cameraTranslate.makeTranslation(100,5,100 + 2 * radius);
 
 
 // TODO: Add keyboard event
