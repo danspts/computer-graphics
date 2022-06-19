@@ -20,6 +20,7 @@ function mod(n, m) {
 // Constants and Predefined Values
 const NB_WINGS = 6;
 const NB_STARS = 5;
+const NB_BAD_STARS = 3;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
 const COLLISION_EPSILON = 8;
@@ -40,7 +41,7 @@ var earthTextureURL = "https://raw.githubusercontent.com/turban/webgl-earth/mast
 var earthDisplacementURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/elev_bump_4k.jpg"
 var earthSpecularURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/water_4k.png"
 var earthCloudsURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/fair_clouds_4k.png"
-
+var badStarTextureURL = "https://i.imgur.com/jJZZUHl.jpeg";
 
 const loader = new THREE.CubeTextureLoader();
 const texture = loader.load([
@@ -61,6 +62,7 @@ const earthCloudsTexture = textureLoader.load(earthCloudsURL);
 
 const moonTexture = textureLoader.load(moonTextureURL);
 const moonDisplacementMap = textureLoader.load(moonDisplacementURL);
+const badStarTexture = textureLoader.load(badStarTextureURL);
 const starTexture = textureLoader.load('src/textures/star.jpg');
 
 
@@ -104,6 +106,16 @@ const earthCloudsMat = new THREE.MeshPhongMaterial({
 
 const starMat = new THREE.MeshPhongMaterial({ 
 	map: starTexture,
+	displacementMap: moonDisplacementMap,
+	displacementScale: 2,
+	bumpMap: moonDisplacementMap,
+	bumpScale: 2,
+	reflectivity: 0,
+	shininess: 0
+});
+
+const badStarMat = new THREE.MeshPhongMaterial({ 
+	map: badStarTexture,
 	displacementMap: moonDisplacementMap,
 	displacementScale: 2,
 	bumpMap: moonDisplacementMap,
@@ -298,6 +310,8 @@ const stars = new THREE.Object3D();
 
 const starGeometry = new THREE.DodecahedronGeometry(1, 1);
 const starObject = new THREE.Mesh(starGeometry, starMat);
+const badStarObject = new THREE.Mesh(starGeometry, badStarMat);
+
 class Star {
 	constructor(curveList, isGood = true) {
 		this.isGood = isGood
@@ -311,12 +325,13 @@ class Star {
 		starRotate.multiply(new THREE.Matrix4().makeRotationZ(Math.random() * 2 - 1));
 		this.tValue = randInt / NUM_POINTS;
 		if (isGood) this.starObj = starObject.clone();
-		else this.starObj = starObject.clone();
+		else this.starObj = badStarObject.clone();
 		this.starObj.applyMatrix4(starRotate);
 	}
 }
 
-var starList = [...Array(NB_STARS)].map(_ => new Star(curveList, false));
+var starList = [...Array(NB_STARS)].map(_ => new Star(curveList, true));
+starList = starList.concat([...Array(NB_BAD_STARS)].map(_ => new Star(curveList, false)));
 starList.forEach(star => stars.add(star.starObj));
 
 // Scene
