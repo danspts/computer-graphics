@@ -1,4 +1,4 @@
-// Scene Declartion
+// Scene Declaration
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -26,13 +26,13 @@ const NUM_POINTS = 3000;
 const COLLISION_EPSILON = NUM_POINTS / 150;
 const SPEED_COEFFICIENT = 1.2;
 const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
+const FPS = 1 / 60; // technically is frame frequency
 let speed = 1;
 let t = 0;
 let curveNum = 0;
 let collected = 0;
 let clock = new THREE.Clock();
 let delta = 0;
-let fps = 1 / 60;
 
 
 var moonTextureURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/lroc_color_poles_1k.jpg";
@@ -124,8 +124,7 @@ const badStarMat = new THREE.MeshPhongMaterial({
 	shininess: 0
 });
 
-// TODO: Spaceship
-// You should copy-paste the spaceship from the previous exercise here
+// Spaceship
 const shipTrajectory = new THREE.Object3D();
 
 // Objects
@@ -178,13 +177,8 @@ const wingRotate = new THREE.Matrix4();
 	ship.add(wing_ob);
 })
 
-// Propelers 
-const geometryPropelers = new THREE.CylinderGeometry(1, 2, 3, 32);
-const properler = new THREE.Mesh(geometryPropelers, wingMat);
 
-
-// TODO: Planets
-// You should add both earth and the moon here
+// Planets
 const planets = new THREE.Object3D()
 
 // Moon
@@ -242,7 +236,7 @@ hemiLight.position.set(-5, -5, 22)
 
 // Moving the Ship Outside the Moon
 const shipTranslate = new THREE.Matrix4();
-shipTranslate.makeTranslation(radius / 3 + 10, 0, 0);
+shipTranslate.makeTranslation(radius / 3 + 20, 0, 0);
 shipTrajectory.applyMatrix4(shipTranslate);
 
 // Bezier Curves
@@ -345,7 +339,6 @@ scene.add(routes);
 scene.add(stars);
 
 const handle_keydown = (e) => {
-	console.log(curveNum)
 	switch (e.code) {
 		case 'ArrowLeft':
 			curveNum = mod(curveNum + 1, lenCurveList);
@@ -370,11 +363,15 @@ const handle_speed = (e) => {
 document.addEventListener('keydown', handle_speed);
 document.addEventListener('keydown', handle_keydown);
 
+// Ship pre-align (for the alignment with the trajectory)
+
 let shipAlign = new THREE.Matrix4().identity();
 shipAlign.multiply(new THREE.Matrix4().makeTranslation(ship.position.x, ship.position.y, ship.position.z));
 shipAlign.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
 shipAlign.multiply(new THREE.Matrix4().makeTranslation(-ship.position.x, -ship.position.y, -ship.position.z));
 ship.applyMatrix4(shipAlign);
+
+// Scoreboard
 
 var score = document.createElement('div');
 score.style.position = 'absolute';
@@ -385,6 +382,8 @@ score.style.top = 50 + 'px';
 score.style.left = 50 + 'px';
 document.body.appendChild(score);
 
+// Timeboard
+
 var time = document.createElement('div');
 time.style.position = 'absolute';
 time.style.width = 100;
@@ -394,6 +393,8 @@ time.style.top = 50 + 'px';
 time.style.right = 50 + 'px';
 document.body.appendChild(time);
 let clockTime = 0;
+
+// Final Score
 
 var promptMsg = document.createElement('div');
 promptMsg.style.position = 'absolute';
@@ -411,10 +412,9 @@ promptMsg.style.fontweight = 'bold';
 promptMsg.style.fontFamily = 'Lucida Handwriting';
 document.body.appendChild(promptMsg);
 
+// Prepare the matrix rotation functions of the planets
 
-let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
-
-let planetRotFuncs = planetList.map(function (planet) {
+let planetRotFuncs = starList.map(x => x.starObj).map(function (planet) {
 	let planetRotate = new THREE.Matrix4().identity();
 	planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
 	planetRotate.multiply(new THREE.Matrix4().makeRotationY(0.001));
@@ -422,12 +422,16 @@ let planetRotFuncs = planetList.map(function (planet) {
 	return _ => planet.applyMatrix4(planetRotate);
 })
 
+// Prepare the matrix rotation functions of Earth's clouds
+
 let planetRotate = new THREE.Matrix4().identity();
 planetRotate.multiply(new THREE.Matrix4().makeTranslation(earthClouds.position.x, earthClouds.position.y, earthClouds.position.z));
 planetRotate.multiply(new THREE.Matrix4().makeRotationZ(-0.001));
 planetRotate.multiply(new THREE.Matrix4().makeTranslation(-earthClouds.position.x, -earthClouds.position.y, -earthClouds.position.z));
 
 planetRotFuncs.push(_ => earthClouds.applyMatrix4(planetRotate))
+
+let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
 
 function animate() {
 	requestAnimationFrame(animate);
@@ -456,13 +460,13 @@ function animate() {
 	score.innerHTML = "Score : " + collected;
 	delta += clock.getDelta();
 
-	if (delta > fps) {
+	if (delta > FPS) {
 		renderer.render(scene, camera);
 		if (t < NUM_POINTS - 1) {
 			clockTime += delta;
 			time.innerHTML = "Time : " + clockTime.toPrecision(5);
 		}
-		delta = delta % fps;
+		delta = delta % FPS;
 	}
 
 	if (t >= NUM_POINTS) {
