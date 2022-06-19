@@ -23,7 +23,7 @@ const NB_STARS = 5;
 const NB_BAD_STARS = 3;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
-const COLLISION_EPSILON = 8;
+const COLLISION_EPSILON = 4;
 const SPEED_COEFFICIENT = 1.2;
 const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
 let speed = 1;
@@ -423,7 +423,7 @@ function animate() {
 	let shift = 0;
 	for (let i = 0; i < ordStarList.length; i++) {
 		let star = ordStarList[i - shift];
-		if (star.t * NUM_POINTS - t < 0) {
+		if (star.t * NUM_POINTS < t + 1) {
 			ordStarList.pop(i);
 			shift += 1;
 		}
