@@ -318,13 +318,32 @@ const handle_speed = (e) => {
 	}
 }
 
+
 document.addEventListener('keydown', handle_speed);
 document.addEventListener('keydown', handle_keydown);
 
 ship.rotation.x = Math.PI / 2;
 
-function animate() {
+var score = document.createElement('div');
+score.style.position = 'absolute';
+score.style.width = 100;
+score.style.height = 100;
+score.style.color = "white";
+score.style.top = 50 + 'px';
+score.style.left = 50 + 'px';
+document.body.appendChild(score);
 
+var time = document.createElement('div');
+time.style.position = 'absolute';
+time.style.width = 100;
+time.style.height = 100;
+time.style.color = "white";
+time.style.top = 50 + 'px';
+time.style.right = 50 + 'px';
+document.body.appendChild(time);
+let clockTime = 0;
+
+function animate() {
 	requestAnimationFrame(animate);
 
 
@@ -349,10 +368,13 @@ function animate() {
 			starList.shift();
 		}
 	}
+	score.innerHTML = "Score : " + collected;
 	delta += clock.getDelta();
 
 	if (delta > fps) {
 		renderer.render(scene, camera);
+		clockTime += delta
+		time.innerHTML = "Time : " + clockTime.toPrecision(5);
 		delta = delta % fps;
 	}
 
