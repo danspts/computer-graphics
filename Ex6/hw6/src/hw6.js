@@ -18,6 +18,7 @@ function degrees_to_radians(degrees) {
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
+const COLLISION_EPSILON = 0.025;
 const SPEED_COEFFICIENT = 1.1;
 const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
 let speed = 1;
@@ -341,7 +342,7 @@ function animate() {
 	}
 
 	// TODO: Test for star-spaceship collision
-	if (starList.length > 0 && starList[0].tValue == (t - 1) / NUM_POINTS) {
+	if (starList.length > 0 && Math.abs(starList[0].tValue - (t - 1) / NUM_POINTS) < COLLISION_EPSILON) {
 		if (starList[0].curveIndex == curveNum) {
 			collected += 1;
 			starList[0].starObj.visible = false;
