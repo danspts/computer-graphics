@@ -227,7 +227,7 @@ translateTarget.makeTranslation(0, 10, 0);
 spotTarget.applyMatrix4(translateTarget);
 ship.add(spotTarget);
 
-// light placeholder
+// Hemisphere Light
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.7);
 hemiLight.color.setHSL(0.6, 1, 0.6);
 hemiLight.groundColor.setHSL(0.095, 1, 1);
