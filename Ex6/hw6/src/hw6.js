@@ -6,20 +6,23 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-
 // helper function for later on
 function degrees_to_radians(degrees) {
 	var pi = Math.PI;
 	return degrees * (pi / 180);
 }
 
+function mod(n, m) {
+	let remainder = n % m;
+	return remainder >= 0 ? remainder : remainder + m;
+}
 
 // Constants and Predefined Values
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
 const COLLISION_EPSILON = 0.025;
-const SPEED_COEFFICIENT = 1.1;
+const SPEED_COEFFICIENT = 1.2;
 const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
 let speed = 1;
 let t = 0;
@@ -71,9 +74,11 @@ var materials = [starMat, earthMat, moonMat, hullMat, windowMat, coneMat, wingMa
 
 // TODO: Spaceship
 // You should copy-paste the spaceship from the previous exercise here
+const shipTrajectory = new THREE.Object3D();
 
 // Objects
-const ship = new THREE.Object3D()
+const ship = new THREE.Object3D();
+shipTrajectory.add(ship);
 
 // Hull
 const hull = new THREE.Object3D()
@@ -181,26 +186,23 @@ ship.add(spotTarget);
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.7);
 hemiLight.color.setHSL(0.6, 1, 0.6);
 hemiLight.groundColor.setHSL(0.095, 1, 1);
-hemiLight.position.set(0, 0, -10);
+hemiLight.position.set(-5, -5, 22)
 
 
 // Moving the Ship Outside the Moon
-const shipRotate = new THREE.Matrix4();
-shipRotate.makeRotationZ(degrees_to_radians(-90));
-ship.applyMatrix4(shipRotate);
 const shipTranslate = new THREE.Matrix4();
 shipTranslate.makeTranslation(radius / 3 + 10, 0, 0);
-ship.applyMatrix4(shipTranslate);
+shipTrajectory.applyMatrix4(shipTranslate);
 
-
+let curves = [];
 // TODO: Bezier Curves
-const curves = new THREE.Object3D();
+const routes = new THREE.Object3D();
 // TODO: remove later, this is just for visualizing
 const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
 // Route A
 const curveA = new THREE.QuadraticBezierCurve3(
-	ship.position,
+	shipTrajectory.position,
 	new THREE.Vector3(0, 5, 40),
 	new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100)
 );
@@ -208,13 +210,12 @@ const curveA = new THREE.QuadraticBezierCurve3(
 const pointsA = curveA.getPoints(3000);
 const curveAGeometry = new THREE.BufferGeometry().setFromPoints(pointsA);
 const routeA = new THREE.Line(curveAGeometry, curveMat);
-curves.add(routeA);
-
-const spacedPointsA = curveA.getSpacedPoints(NUM_POINTS);
+routes.add(routeA);
+curves.push(curveA);
 
 // Route B
 const curveB = new THREE.QuadraticBezierCurve3(
-	ship.position,
+	shipTrajectory.position,
 	new THREE.Vector3(50, 0, 50),
 	new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100)
 );
@@ -222,13 +223,12 @@ const curveB = new THREE.QuadraticBezierCurve3(
 const pointsB = curveB.getPoints(3000);
 const curveBGeometry = new THREE.BufferGeometry().setFromPoints(pointsB);
 const routeB = new THREE.Line(curveBGeometry, curveMat);
-curves.add(routeB);
-
-const spacedPointsB = curveB.getSpacedPoints(NUM_POINTS);
+routes.add(routeB);
+curves.push(curveB);
 
 // Route C
 const curveC = new THREE.QuadraticBezierCurve3(
-	ship.position,
+	shipTrajectory.position,
 	new THREE.Vector3(70, -5, 70),
 	new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100)
 );
@@ -236,17 +236,16 @@ const curveC = new THREE.QuadraticBezierCurve3(
 const pointsC = curveC.getPoints(3000);
 const curveCGeometry = new THREE.BufferGeometry().setFromPoints(pointsC);
 const routeC = new THREE.Line(curveCGeometry, curveMat);
-curves.add(routeC);
+routes.add(routeC);
+curves.push(curveC);
 
-const spacedPointsC = curveC.getSpacedPoints(NUM_POINTS);
-
-var curveList = [spacedPointsA, spacedPointsB, spacedPointsC];
+var curveList = curves.map(curve => curve.getSpacedPoints(NUM_POINTS));
 const lenCurveList = curveList.length;
 
 // TODO: Camera Settings
 // Set the camera following the spaceship here
 const cameraTranslate = new THREE.Matrix4();
-cameraTranslate.makeTranslation(ship.position.x, ship.position.y - 5, ship.position.z - 20);
+cameraTranslate.makeTranslation(shipTrajectory.position.x, shipTrajectory.position.y - 5, shipTrajectory.position.z - 20);
 const cameraRotateY = new THREE.Matrix4();
 cameraRotateY.makeRotationY(degrees_to_radians(-20));
 const cameraRotateX = new THREE.Matrix4();
@@ -260,41 +259,40 @@ camera.applyMatrix4(cameraTranslate)
 
 // TODO: Add collectible stars
 const stars = new THREE.Object3D();
+
+const starGeometry = new THREE.DodecahedronGeometry();
+const starObject = new THREE.Mesh(starGeometry, starMat);
 class Star {
-	constructor(curveIndex, tValue, starObj) {
-		this.curveIndex = curveIndex;
-		this.tValue = tValue;
-		this.starObj = starObj
+
+
+	constructor(curveList) {
+		let randInt = ~~(Math.random() * NUM_POINTS)
+		let space = curveList[~~(Math.random() * curveList.length)]
+		let v = space[randInt];
+		let starTranslate = new THREE.Matrix4();
+		starTranslate.makeTranslation(v.x, v.y, v.z);
+		this.tValue = randInt / NUM_POINTS;
+		this.starObj = starObject.clone();
+		this.starObj.applyMatrix4(starTranslate);
 	}
 }
 
-const starGeometry = new THREE.DodecahedronGeometry();
-var starObject = new THREE.Mesh(starGeometry, starMat);
+let star_obj = new Star(curveList);
 
-let v = spacedPointsA[NUM_POINTS / 2];
-const starTranslate = new THREE.Matrix4();
-starTranslate.makeTranslation(v.x, v.y, v.z);
-starObject.applyMatrix4(starTranslate);
-stars.add(starObject);
+stars.add(star_obj.starObj);
 
-const star1 = new Star(0, (0.5 * NUM_POINTS) / NUM_POINTS, starObject);
-
-var starList = [star1];
+var starList = [star_obj];
 
 
 // Scene
-scene.add(ship);
+scene.add(shipTrajectory);
+// scene.add(ship);
 scene.add(hemiLight);
 scene.add(planets);
 scene.add(sunLight);
-scene.add(curves);
+scene.add(routes);
 scene.add(stars);
 // scene.add(ball);
-
-function mod(n, m) {
-	let remainder = n % m;
-	return remainder >= 0 ? remainder : remainder + m;
-}
 
 // TODO: Add keyboard event
 // We wrote some of the function for you
@@ -318,11 +316,12 @@ const handle_speed = (e) => {
 			speed *= INV_SPEED_COEFFICIENT;
 			break;
 	}
-	console.log(NUM_POINTS);
 }
 
 document.addEventListener('keydown', handle_speed);
 document.addEventListener('keydown', handle_keydown);
+
+ship.rotation.x = Math.PI / 2;
 
 function animate() {
 
@@ -333,10 +332,11 @@ function animate() {
 	if (t < NUM_POINTS) {
 		let pointList = curveList[curveNum];
 		let newPos = pointList[t];
-		newPos.addScaledVector(ship.position, -1);
+		shipTrajectory.lookAt(pointList[t])
+		newPos.addScaledVector(shipTrajectory.position, -1);
 		let posTranslate = new THREE.Matrix4();
 		posTranslate.makeTranslation(newPos.x, newPos.y, newPos.z);
-		ship.applyMatrix4(posTranslate);
+		shipTrajectory.applyMatrix4(posTranslate);
 		camera.applyMatrix4(posTranslate);
 		t += Math.max(1, Math.floor(speed));
 	}
