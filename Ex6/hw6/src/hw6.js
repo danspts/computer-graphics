@@ -33,6 +33,15 @@ let clock = new THREE.Clock();
 let delta = 0;
 let fps = 1 / 60;
 
+
+var moonTextureURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/lroc_color_poles_1k.jpg";
+var moonDisplacementURL = "https://s3-us-west-2.amazonaws.com/s.cdpn.io/17271/ldem_3_8bit.jpg";
+var earthTextureURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/2_no_clouds_4k.jpg"
+var earthDisplacementURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/elev_bump_4k.jpg"
+var earthSpecularURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/water_4k.png"
+var earthCloudsURL = "https://raw.githubusercontent.com/turban/webgl-earth/master/images/fair_clouds_4k.png"
+
+
 const loader = new THREE.CubeTextureLoader();
 const texture = loader.load([
 	'src/skybox/right.png',
@@ -44,11 +53,14 @@ const texture = loader.load([
 ]);
 scene.background = texture;
 
-
 const textureLoader = new THREE.TextureLoader();
+const earthTexture = textureLoader.load(earthTextureURL);
+const earthDisplacementMap = textureLoader.load(earthDisplacementURL);
+const earthSpecular = textureLoader.load(earthSpecularURL);
+const earthCloudsTexture = textureLoader.load(earthCloudsURL);
 
-const earthTex = textureLoader.load('src/textures/earth.jpg');
-const moonTex = textureLoader.load('src/textures/moon.jpg');
+const moonTexture = textureLoader.load(moonTextureURL);
+const moonDisplacementMap = textureLoader.load(moonDisplacementURL);
 const starTex = textureLoader.load('src/textures/star.jpg');
 
 
@@ -59,14 +71,38 @@ windowMat.side = THREE.BackSide;
 const coneMat = new THREE.MeshPhongMaterial({ color: 0xa64d79 });
 const wingMat = new THREE.MeshPhongMaterial({ color: 0x16537e });
 wingMat.side = THREE.DoubleSide;
-// hullMat.wireframe = true;
-const moonMat = new THREE.MeshPhongMaterial({ map: moonTex });
-const earthMat = new THREE.MeshPhongMaterial({ map: earthTex });
-// earthMat.wireframe = true;
+const moonMat = new THREE.MeshPhongMaterial(
+	{
+		color: 0xffffff,
+		map: moonTexture,
+		displacementMap: moonDisplacementMap,
+		displacementScale: 0.06,
+		bumpMap: moonDisplacementMap,
+		bumpScale: 0.07,
+		reflectivity: 0,
+		shininess: 0
+	}
+
+);
+const earthMat = new THREE.MeshPhongMaterial(
+	{
+		color: 0xffffff,
+		map: earthTexture,
+		displacementMap: earthDisplacementMap,
+		displacementScale: 0.06,
+		bumpMap: earthDisplacementMap,
+		bumpScale: 0.07,
+		specularMap: earthSpecular,
+		specular: new THREE.Color('grey')
+	}
+
+);
+const earthCloudsMat = new THREE.MeshPhongMaterial({
+	map: earthCloudsTexture,
+	transparent: true
+})
+
 const starMat = new THREE.MeshPhongMaterial({ map: starTex });
-
-var materials = [starMat, earthMat, moonMat, hullMat, windowMat, coneMat, wingMat]
-
 
 // TODO: Spaceship
 // You should copy-paste the spaceship from the previous exercise here
@@ -142,14 +178,20 @@ moon.add(moonSphere);
 // Earth
 const earth = new THREE.Object3D()
 planets.add(earth)
+
 const earthSphereGeometry = new THREE.SphereGeometry(radius, 32, 16);
 const earthSphere = new THREE.Mesh(earthSphereGeometry, earthMat);
 const earthTranslateMatrix = new THREE.Matrix4();
 earthTranslateMatrix.makeTranslation(100, 5, 100);
 earthSphere.applyMatrix4(earthTranslateMatrix);
+const earthCloudsGeometry = new THREE.SphereGeometry(radius + 1.5, 32, 16);
+const earthClouds = new THREE.Mesh(earthCloudsGeometry, earthCloudsMat);
+earthClouds.applyMatrix4(earthTranslateMatrix);
+earth.add(earthClouds);
 earth.add(earthSphere);
 
-let planetList = [earth, moon]
+
+let planetList = [earthSphere, moonSphere]
 
 // Directional Light
 const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -249,19 +291,21 @@ const stars = new THREE.Object3D();
 const starGeometry = new THREE.DodecahedronGeometry();
 const starObject = new THREE.Mesh(starGeometry, starMat);
 class Star {
-	constructor(curveList) {
+	constructor(curveList, isGood = true) {
+		this.isGood = isGood
 		let randInt = ~~(Math.random() * NUM_POINTS)
 		this.space = curveList[~~(Math.random() * curveList.length)]
 		let v = this.space[randInt];
 		let starTranslate = new THREE.Matrix4();
 		starTranslate.makeTranslation(v.x, v.y, v.z);
 		this.tValue = randInt / NUM_POINTS;
-		this.starObj = starObject.clone();
+		if (isGood) this.starObj = starObject.clone();
+		else this.starObj = starObject.clone();
 		this.starObj.applyMatrix4(starTranslate);
 	}
 }
 
-var starList = [...Array(NB_STARS)].map(_ => new Star(curveList));
+var starList = [...Array(NB_STARS)].map(_ => new Star(curveList, false));
 starList.forEach(star => stars.add(star.starObj));
 
 // Scene
@@ -323,10 +367,17 @@ let ordStarList = starList.sort(function (x, y) { return x.t < y.t })
 let planetRotFuncs = planetList.map(function (planet) {
 	let planetRotate = new THREE.Matrix4().identity();
 	planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
-	planetRotate.multiply(new THREE.Matrix4().makeRotationX(0.01));
+	planetRotate.multiply(new THREE.Matrix4().makeRotationY(0.001));
 	planetRotate.multiply(new THREE.Matrix4().makeTranslation(-planet.position.x, -planet.position.y, -planet.position.z));
 	return _ => planet.applyMatrix4(planetRotate);
 })
+
+let planetRotate = new THREE.Matrix4().identity();
+planetRotate.multiply(new THREE.Matrix4().makeTranslation(earthClouds.position.x, earthClouds.position.y, earthClouds.position.z));
+planetRotate.multiply(new THREE.Matrix4().makeRotationZ(-0.001));
+planetRotate.multiply(new THREE.Matrix4().makeTranslation(-earthClouds.position.x, -earthClouds.position.y, -earthClouds.position.z));
+
+planetRotFuncs.push(_ => earthClouds.applyMatrix4(planetRotate))
 
 function animate() {
 	requestAnimationFrame(animate);
@@ -344,16 +395,17 @@ function animate() {
 		t += Math.max(1, Math.floor(speed));
 	}
 	let shift = 0;
-	let get_star = i => ordStarList[i - shift]
 	for (let i = 0; i < ordStarList.length; i++) {
-		if (get_star(i).t * NUM_POINTS - t < 0) {
+		let star = ordStarList[i - shift];
+		if (star.t * NUM_POINTS - t < 0) {
 			ordStarList.pop(i);
 			shift += 1;
 		}
-		else if (get_star(i).tValue * NUM_POINTS - t < COLLISION_EPSILON) {
-			if (get_star(i).space == curveList[curveNum] && get_star(i).starObj.visible) {
-				collected += 1;
-				get_star(i).starObj.visible = false;
+		else if (star.tValue * NUM_POINTS - t < COLLISION_EPSILON) {
+			if (star.space == curveList[curveNum] && star.starObj.visible) {
+				if (star.isGood) collected += 1;
+				else collected -= 3;
+				star.starObj.visible = false;
 			}
 		}
 	}
