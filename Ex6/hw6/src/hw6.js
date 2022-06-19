@@ -202,7 +202,8 @@ planets.add(earth)
 const earthSphereGeometry = new THREE.SphereGeometry(radius, 32, 16);
 const earthSphere = new THREE.Mesh(earthSphereGeometry, earthMat);
 const earthTranslateMatrix = new THREE.Matrix4();
-earthTranslateMatrix.makeTranslation(100, 5, 100);
+let directionEarth = new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100);
+earthTranslateMatrix.makeTranslation(1.5 * directionEarth.x, 1.5 * directionEarth.y, 1.5 * directionEarth.z);
 earthSphere.applyMatrix4(earthTranslateMatrix);
 const earthCloudsGeometry = new THREE.SphereGeometry(radius + 1.5, 32, 16);
 const earthClouds = new THREE.Mesh(earthCloudsGeometry, earthCloudsMat);
@@ -247,7 +248,7 @@ shipTrajectory.applyMatrix4(shipTranslate);
 // Bezier Curves
 let curves = [];
 const routes = new THREE.Object3D();
-const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000, visible:false});
+const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000, visible: false });
 
 // Route A
 const curveA = new THREE.QuadraticBezierCurve3(
