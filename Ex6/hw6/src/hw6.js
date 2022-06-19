@@ -1,17 +1,16 @@
 // Scene Declartion
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 const renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight );
-document.body.appendChild( renderer.domElement );
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
 
 // helper function for later on
-function degrees_to_radians(degrees)
-{
-  var pi = Math.PI;
-  return degrees * (pi/180);
+function degrees_to_radians(degrees) {
+	var pi = Math.PI;
+	return degrees * (pi / 180);
 }
 
 
@@ -19,21 +18,27 @@ function degrees_to_radians(degrees)
 const NB_WINGS = 6;
 const INV_SCALE_FACTOR = 5;
 const NUM_POINTS = 3000;
+const SPEED_COEFFICIENT = 1.1;
+const INV_SPEED_COEFFICIENT = 1 / SPEED_COEFFICIENT;
+let speed = 1;
 let t = 0;
 let curveNum = 0;
 let collected = 0;
+let clock = new THREE.Clock();
+let delta = 0;
+let fps = 1 / 60;
 
 
 // Here we load the cubemap and skymap, you may change it
 
 const loader = new THREE.CubeTextureLoader();
 const texture = loader.load([
-  'src/skybox/right.png',
-  'src/skybox/left.png',
-  'src/skybox/top.png',
-  'src/skybox/bottom.png',
-  'src/skybox/front.png',
-  'src/skybox/back.png',
+	'src/skybox/right.png',
+	'src/skybox/left.png',
+	'src/skybox/top.png',
+	'src/skybox/bottom.png',
+	'src/skybox/front.png',
+	'src/skybox/back.png',
 ]);
 scene.background = texture;
 
@@ -116,7 +121,7 @@ const wingRotate = new THREE.Matrix4();
 })
 
 // Propelers 
-const geometryPropelers = new THREE.CylinderGeometry( 1, 2, 3, 32 );
+const geometryPropelers = new THREE.CylinderGeometry(1, 2, 3, 32);
 const properler = new THREE.Mesh(geometryPropelers, wingMat);
 
 
@@ -128,7 +133,7 @@ const planets = new THREE.Object3D()
 const moon = new THREE.Object3D()
 planets.add(moon)
 let radius = 5 * (coneGeometry.parameters.height + cylinderGeometry.parameters.height)
-const moonSphereGeometry = new THREE.SphereGeometry(radius/3, 32, 16);
+const moonSphereGeometry = new THREE.SphereGeometry(radius / 3, 32, 16);
 const moonSphere = new THREE.Mesh(moonSphereGeometry, moonMat);
 moon.add(moonSphere);
 
@@ -136,9 +141,9 @@ moon.add(moonSphere);
 const earth = new THREE.Object3D()
 planets.add(earth)
 const earthSphereGeometry = new THREE.SphereGeometry(radius, 32, 16);
-const earthSphere = new THREE.Mesh( earthSphereGeometry, earthMat);
+const earthSphere = new THREE.Mesh(earthSphereGeometry, earthMat);
 const earthTranslateMatrix = new THREE.Matrix4();
-earthTranslateMatrix.makeTranslation(100,5,100);
+earthTranslateMatrix.makeTranslation(100, 5, 100);
 earthSphere.applyMatrix4(earthTranslateMatrix);
 earth.add(earthSphere);
 
@@ -153,21 +158,21 @@ earth.add(earthSphere);
 // TODO: Add Lighting
 
 // Directional Light
-const sunLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
 const translateSun = new THREE.Matrix4();
-translateSun.makeTranslation(0,-10,10);
+translateSun.makeTranslation(0, -10, 10);
 sunLight.applyMatrix4(translateSun);
 sunLight.target = planets;
 
 // Spotlight
-const spotLight = new THREE.SpotLight( 0xffffff );
-spotLight.position.set( 0, 6, 0 );
+const spotLight = new THREE.SpotLight(0xffffff);
+spotLight.position.set(0, 6, 0);
 ship.add(spotLight);
 
 const spotTarget = new THREE.Object3D();
 spotLight.target = spotTarget;
 const translateTarget = new THREE.Matrix4();
-translateTarget.makeTranslation(0,10,0);
+translateTarget.makeTranslation(0, 10, 0);
 spotTarget.applyMatrix4(translateTarget);
 ship.add(spotTarget);
 
@@ -190,18 +195,18 @@ ship.applyMatrix4(shipTranslate);
 // TODO: Bezier Curves
 const curves = new THREE.Object3D();
 // TODO: remove later, this is just for visualizing
-const curveMat = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+const curveMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
 
 // Route A
 const curveA = new THREE.QuadraticBezierCurve3(
 	ship.position,
-	new THREE.Vector3( 0, 5, 40 ),
-	new THREE.Vector3( 100, 10 + radius + 5, -10 -radius + 100 )
+	new THREE.Vector3(0, 5, 40),
+	new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100)
 );
 
-const pointsA = curveA.getPoints( 3000 );
-const curveAGeometry = new THREE.BufferGeometry().setFromPoints( pointsA );
-const routeA = new THREE.Line( curveAGeometry, curveMat );
+const pointsA = curveA.getPoints(3000);
+const curveAGeometry = new THREE.BufferGeometry().setFromPoints(pointsA);
+const routeA = new THREE.Line(curveAGeometry, curveMat);
 curves.add(routeA);
 
 const spacedPointsA = curveA.getSpacedPoints(NUM_POINTS);
@@ -209,13 +214,13 @@ const spacedPointsA = curveA.getSpacedPoints(NUM_POINTS);
 // Route B
 const curveB = new THREE.QuadraticBezierCurve3(
 	ship.position,
-	new THREE.Vector3( 50, 0, 50 ),
-	new THREE.Vector3( 100, 10 + radius + 5, -10 -radius + 100 )
+	new THREE.Vector3(50, 0, 50),
+	new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100)
 );
 
-const pointsB = curveB.getPoints( 3000 );
-const curveBGeometry = new THREE.BufferGeometry().setFromPoints( pointsB );
-const routeB = new THREE.Line( curveBGeometry, curveMat );
+const pointsB = curveB.getPoints(3000);
+const curveBGeometry = new THREE.BufferGeometry().setFromPoints(pointsB);
+const routeB = new THREE.Line(curveBGeometry, curveMat);
 curves.add(routeB);
 
 const spacedPointsB = curveB.getSpacedPoints(NUM_POINTS);
@@ -223,18 +228,19 @@ const spacedPointsB = curveB.getSpacedPoints(NUM_POINTS);
 // Route C
 const curveC = new THREE.QuadraticBezierCurve3(
 	ship.position,
-	new THREE.Vector3( 70, -5, 70 ),
-	new THREE.Vector3( 100, 10 + radius + 5, -10 -radius + 100 )
+	new THREE.Vector3(70, -5, 70),
+	new THREE.Vector3(100, 10 + radius + 5, -10 - radius + 100)
 );
 
-const pointsC = curveC.getPoints( 3000 );
-const curveCGeometry = new THREE.BufferGeometry().setFromPoints( pointsC );
-const routeC = new THREE.Line( curveCGeometry, curveMat );
+const pointsC = curveC.getPoints(3000);
+const curveCGeometry = new THREE.BufferGeometry().setFromPoints(pointsC);
+const routeC = new THREE.Line(curveCGeometry, curveMat);
 curves.add(routeC);
 
 const spacedPointsC = curveC.getSpacedPoints(NUM_POINTS);
 
 var curveList = [spacedPointsA, spacedPointsB, spacedPointsC];
+const lenCurveList = curveList.length;
 
 // TODO: Camera Settings
 // Set the camera following the spaceship here
@@ -264,13 +270,13 @@ class Star {
 const starGeometry = new THREE.DodecahedronGeometry();
 var starObject = new THREE.Mesh(starGeometry, starMat);
 
-let v = spacedPointsA[NUM_POINTS/2];
+let v = spacedPointsA[NUM_POINTS / 2];
 const starTranslate = new THREE.Matrix4();
 starTranslate.makeTranslation(v.x, v.y, v.z);
 starObject.applyMatrix4(starTranslate);
 stars.add(starObject);
 
-const star1 = new Star(0, (0.5 * NUM_POINTS)/NUM_POINTS, starObject);
+const star1 = new Star(0, (0.5 * NUM_POINTS) / NUM_POINTS, starObject);
 
 var starList = [star1];
 
@@ -284,53 +290,71 @@ scene.add(curves);
 scene.add(stars);
 // scene.add(ball);
 
+function mod(n, m) {
+	let remainder = n % m;
+	return remainder >= 0 ? remainder : remainder + m;
+}
 
 // TODO: Add keyboard event
 // We wrote some of the function for you
 const handle_keydown = (e) => {
-	if(e.code == 'ArrowLeft'){
-		// TODO
-		curveNum = (curveNum + 1) % 3;
-	} else if (e.code == 'ArrowRight'){
-		// TODO
-		curveNum = curveNum - 1;
-		if (curveNum < 0){
-			curveNum = curveList.length - 1;
-		}
-		curveNum = curveNum % 3;
+	switch (e.code) {
+		case 'ArrowLeft':
+			curveNum = mod(curveNum + 1, lenCurveList);
+			break;
+		case 'ArrowRight':
+			curveNum = mod(curveNum - 1, lenCurveList);
+			break;
 	}
 }
+
+const handle_speed = (e) => {
+	switch (e.code) {
+		case 'ArrowUp':
+			speed *= SPEED_COEFFICIENT;
+			break;
+		case 'ArrowDown':
+			speed *= INV_SPEED_COEFFICIENT;
+			break;
+	}
+	console.log(NUM_POINTS);
+}
+
+document.addEventListener('keydown', handle_speed);
 document.addEventListener('keydown', handle_keydown);
-
-
 
 function animate() {
 
-	requestAnimationFrame( animate );
+	requestAnimationFrame(animate);
+
 
 	// TODO: Animation for the spaceship position
-	if( t < NUM_POINTS ){
+	if (t < NUM_POINTS) {
 		let pointList = curveList[curveNum];
 		let newPos = pointList[t];
-		newPos.addScaledVector(ship.position,-1);
+		newPos.addScaledVector(ship.position, -1);
 		let posTranslate = new THREE.Matrix4();
 		posTranslate.makeTranslation(newPos.x, newPos.y, newPos.z);
 		ship.applyMatrix4(posTranslate);
 		camera.applyMatrix4(posTranslate);
-		t += 1;
+		t += Math.max(1, Math.floor(speed));
 	}
 
 	// TODO: Test for star-spaceship collision
-	if(starList.length > 0 && starList[0].tValue == (t - 1) / NUM_POINTS){
-		if(starList[0].curveIndex == curveNum){
+	if (starList.length > 0 && starList[0].tValue == (t - 1) / NUM_POINTS) {
+		if (starList[0].curveIndex == curveNum) {
 			collected += 1;
 			starList[0].starObj.visible = false;
 			starList.shift();
 		}
 	}
+	delta += clock.getDelta();
 
-	
-	renderer.render( scene, camera );
+	if (delta > fps) {
+		renderer.render(scene, camera);
+		delta = delta % fps;
+	}
+
 
 }
 animate()
