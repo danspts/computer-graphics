@@ -154,15 +154,7 @@ earthTranslateMatrix.makeTranslation(100, 5, 100);
 earthSphere.applyMatrix4(earthTranslateMatrix);
 earth.add(earthSphere);
 
-// TODO: remove later
-// const ballgeo = new THREE.SphereGeometry(1,32,16);
-// const ball = new THREE.Mesh(ballgeo, moonMat);
-// const ballmove = new THREE.Matrix4();
-// ballmove.makeTranslation(0,10,0);
-// ball.applyMatrix4(ballmove);
-
-
-// TODO: Add Lighting
+let planetList = [earth, moon]
 
 // Directional Light
 const sunLight = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -277,7 +269,6 @@ class Star {
 }
 
 var starList = [...Array(NB_STARS)].map(_ => new Star(curveList));
-console.log(starList)
 starList.forEach(star => stars.add(star.starObj));
 
 // Scene
@@ -340,9 +331,20 @@ document.body.appendChild(time);
 let clockTime = 0;
 
 let ordStarList = starList.sort(function(x, y){return x.t < y.t})
+const planetRotate = new THREE.Matrix4();
+planetRotate.makeRotationY(0.01);
+
 
 function animate() {
 	requestAnimationFrame(animate);
+
+	planetList.forEach(function(planet){
+		let planetRotate = new THREE.Matrix4().identity();
+		planetRotate.multiply(new THREE.Matrix4().makeTranslation(planet.position.x, planet.position.y, planet.position.z));
+		planetRotate.multiply(new THREE.Matrix4().makeRotationY(0.01));
+		planetRotate.multiply(new THREE.Matrix4().makeTranslation(-planet.position.x, -planet.position.y, -planet.position.z));
+		planet.applyMatrix4(planetRotate);
+	})
 
 	if (t < NUM_POINTS) {
 		let pointList = curveList[curveNum];
@@ -355,15 +357,17 @@ function animate() {
 		camera.applyMatrix4(posTranslate);
 		t += Math.max(1, Math.floor(speed));
 	}
+	let shift = 0;
+	let get_star = i => ordStarList[i - shift]
 	for (let i = 0; i < ordStarList.length; i++) {
-		if (ordStarList[i].t * NUM_POINTS - t < 0){
+		if (get_star(i).t * NUM_POINTS - t < 0){
 			ordStarList.pop(i);
+			shift += 1;
 		}
-		if (ordStarList[i].tValue * NUM_POINTS - t < COLLISION_EPSILON){
-			if (ordStarList[i].space == curveList[curveNum] && ordStarList[i].starObj.visible) {
+		else if (get_star(i).tValue * NUM_POINTS - t < COLLISION_EPSILON){
+			if (get_star(i).space == curveList[curveNum] && get_star(i).starObj.visible) {
 				collected += 1;
-				ordStarList[i].starObj.visible = false;
-				ordStarList[i].shift();
+				get_star(i).starObj.visible = false;
 			}
 		}
 	}
