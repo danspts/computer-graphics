@@ -104,7 +104,7 @@ const earthCloudsMat = new THREE.MeshPhongMaterial({
 	transparent: true
 })
 
-const starMat = new THREE.MeshPhongMaterial({ 
+const starMat = new THREE.MeshPhongMaterial({
 	map: starTexture,
 	displacementMap: moonDisplacementMap,
 	displacementScale: 2,
@@ -114,7 +114,7 @@ const starMat = new THREE.MeshPhongMaterial({
 	shininess: 0
 });
 
-const badStarMat = new THREE.MeshPhongMaterial({ 
+const badStarMat = new THREE.MeshPhongMaterial({
 	map: badStarTexture,
 	displacementMap: moonDisplacementMap,
 	displacementScale: 2,
@@ -368,7 +368,11 @@ const handle_speed = (e) => {
 document.addEventListener('keydown', handle_speed);
 document.addEventListener('keydown', handle_keydown);
 
-ship.rotation.x = Math.PI / 2;
+let shipAlign = new THREE.Matrix4().identity();
+shipAlign.multiply(new THREE.Matrix4().makeTranslation(ship.position.x, ship.position.y, ship.position.z));
+shipAlign.multiply(new THREE.Matrix4().makeRotationX(Math.PI / 2));
+shipAlign.multiply(new THREE.Matrix4().makeTranslation(-ship.position.x, -ship.position.y, -ship.position.z));
+ship.applyMatrix4(shipAlign);
 
 var score = document.createElement('div');
 score.style.position = 'absolute';
@@ -438,8 +442,8 @@ function animate() {
 		camera.applyMatrix4(posTranslate);
 		t += Math.max(1, Math.floor(speed));
 	}
-	ordStarList = ordStarList.filter(x => x.tValue  * NUM_POINTS > t && x.starObj.visible)
-	ordStarList.forEach(function(star){
+	ordStarList = ordStarList.filter(x => x.tValue * NUM_POINTS > t && x.starObj.visible)
+	ordStarList.forEach(function (star) {
 		if (star.tValue * NUM_POINTS - t < COLLISION_EPSILON) {
 			if (star.space == curveList[curveNum]) {
 				if (star.isGood) collected += 1;
@@ -460,7 +464,7 @@ function animate() {
 		delta = delta % fps;
 	}
 
-	if(t >= NUM_POINTS){
+	if (t >= NUM_POINTS) {
 		promptMsg.innerHTML = " Your Score is " + collected + " ";
 	}
 
